@@ -42,9 +42,29 @@ main{max-width:1250px;margin:0 auto;padding:18px 18px 95px}
 .grid-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
 .metric{padding:16px}
+.metric.clickable{cursor:pointer;position:relative;transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease;user-select:none}
+.metric.clickable:active{transform:scale(.985)}
+.metric.clickable:hover{border-color:#c9c4b9;box-shadow:0 13px 32px rgba(28,34,31,.11)}
 .metric .label{color:var(--muted);font-size:12px;margin-bottom:7px}
 .metric .value{font-size:24px;font-weight:800;letter-spacing:-.5px}
 .metric .sub{font-size:11px;color:var(--muted);margin-top:5px}
+.metric-action{font-size:11px;font-weight:800;color:var(--green);margin-top:10px}
+.detail-list{display:grid;gap:9px}
+.detail-item{background:white;border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer}
+.detail-item:active{transform:scale(.992)}
+.detail-head{display:flex;gap:8px;align-items:flex-start}
+.detail-head .detail-title{font-weight:800;flex:1;font-size:13px;line-height:1.3}
+.detail-amount{font-weight:850;font-variant-numeric:tabular-nums;white-space:nowrap;font-size:13px}
+.detail-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.detail-meta span{font-size:10px;color:var(--muted);background:#f5f3ee;border-radius:999px;padding:4px 7px}
+.detail-finance{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}
+.detail-finance div{background:#faf9f6;border-radius:9px;padding:7px}
+.detail-finance small{display:block;color:var(--muted);font-size:9px;margin-bottom:2px}
+.detail-finance strong{font-size:11px}
+.detail-total{position:sticky;bottom:-18px;background:var(--text);color:white;border-radius:13px;padding:12px 14px;margin-top:12px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.detail-total span{font-size:11px;opacity:.8}
+.detail-total strong{font-size:16px}
+@media(max-width:650px){.detail-finance{grid-template-columns:1fr 1fr 1fr}.metric-action{margin-top:7px}}
 .section{margin-top:16px;padding:18px}
 .section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .section-title h2{font-size:17px;margin:0;flex:1}
@@ -227,6 +247,16 @@ if(window.pdfjsLib){
   <button data-btab="invoice" onclick="showTab('invoice')">📄<br>Facture</button>
   <button data-btab="lots" onclick="showTab('lots')">📦<br>Lots</button>
   <button data-btab="settings" onclick="showTab('settings')">⚙️<br>Réglages</button>
+</div>
+
+<div id="metricDetailModal" class="modal" onclick="if(event.target===this) closeMetricDetails()">
+  <div class="dialog">
+    <div class="dialog-head">
+      <h3 id="metricDetailTitle">Détail</h3>
+      <button class="btn small" onclick="closeMetricDetails()">Fermer</button>
+    </div>
+    <div id="metricDetailBody"></div>
+  </div>
 </div>
 
 <div id="expenseModal" class="modal" onclick="if(event.target===this) closeExpenseModal()">
@@ -484,11 +514,11 @@ function renderDashboard(){
   const unknownRate = paidExpenses().some(e=>e.currency!=='TND' && !rateFor(e));
   document.getElementById('tab-dashboard').innerHTML=`
     <div class="grid-cards">
-      <div class="card metric"><div class="label">Total payé équivalent</div><div class="value">${fmt(t.paid,2)} TND</div><div class="sub">Taux USD/TND ${fmt(state.settings.usdRate,3)}</div></div>
-      <div class="card metric"><div class="label">Reste connu</div><div class="value">${fmt(t.remaining,2)} TND</div><div class="sub">Seulement les marchés avec total connu</div></div>
-      <div class="card metric"><div class="label">Matériel payé</div><div class="value">${fmt(t.material,2)} TND</div><div class="sub">Équivalent TND</div></div>
-      <div class="card metric"><div class="label">Main-d’œuvre payée</div><div class="value">${fmt(t.labor,2)} TND</div><div class="sub">Équivalent TND</div></div>
-      <div class="card metric"><div class="label">Devis non confirmés</div><div class="value">${fmt(t.quotes,2)} TND</div><div class="sub">Non comptés comme payés</div></div>
+      <div class="card metric clickable" role="button" tabindex="0" onclick="openMetricDetails('paid')" onkeydown="if(event.key==='Enter'||event.key===' ')openMetricDetails('paid')"><div class="label">Total payé équivalent</div><div class="value">${fmt(t.paid,2)} TND</div><div class="sub">Taux USD/TND ${fmt(state.settings.usdRate,3)}</div><div class="metric-action">Voir le détail ›</div></div>
+      <div class="card metric clickable" role="button" tabindex="0" onclick="openMetricDetails('remaining')" onkeydown="if(event.key==='Enter'||event.key===' ')openMetricDetails('remaining')"><div class="label">Reste connu</div><div class="value">${fmt(t.remaining,2)} TND</div><div class="sub">Seulement les marchés avec total connu</div><div class="metric-action">Voir ce qui reste à payer ›</div></div>
+      <div class="card metric clickable" role="button" tabindex="0" onclick="openMetricDetails('material')" onkeydown="if(event.key==='Enter'||event.key===' ')openMetricDetails('material')"><div class="label">Matériel payé</div><div class="value">${fmt(t.material,2)} TND</div><div class="sub">Équivalent TND</div><div class="metric-action">Voir les achats ›</div></div>
+      <div class="card metric clickable" role="button" tabindex="0" onclick="openMetricDetails('labor')" onkeydown="if(event.key==='Enter'||event.key===' ')openMetricDetails('labor')"><div class="label">Main-d’œuvre payée</div><div class="value">${fmt(t.labor,2)} TND</div><div class="sub">Équivalent TND</div><div class="metric-action">Voir les paiements ›</div></div>
+      <div class="card metric clickable" role="button" tabindex="0" onclick="openMetricDetails('quotes')" onkeydown="if(event.key==='Enter'||event.key===' ')openMetricDetails('quotes')"><div class="label">Devis non confirmés</div><div class="value">${fmt(t.quotes,2)} TND</div><div class="sub">Non comptés comme payés</div><div class="metric-action">Voir les devis ›</div></div>
     </div>
     <div class="summary-strip">
       ${Object.entries(cur).map(([c,v])=>`<div class="pill">${c}<strong>${money(v,c)}</strong></div>`).join('')}
@@ -523,6 +553,79 @@ function renderDashboard(){
       </div>
     </div>`;
 }
+function metricDetailConfig(kind){
+  const configs={
+    paid:{title:'Total payé — détail des sources',filter:e=>Number(e.paidAmount)>0,value:e=>paidTnd(e)||0,native:e=>Number(e.paidAmount||0),label:'Payé'},
+    remaining:{title:'Reste connu à payer — détail exact',filter:e=>(remainingNative(e)||0)>0,value:e=>remainingTnd(e)||0,native:e=>remainingNative(e)||0,label:'Reste'},
+    material:{title:'Matériel payé — détail des achats',filter:e=>e.type==='Matériel'&&Number(e.paidAmount)>0,value:e=>paidTnd(e)||0,native:e=>Number(e.paidAmount||0),label:'Payé'},
+    labor:{title:'Main-d’œuvre payée — détail des paiements',filter:e=>e.type==='Main-d’œuvre'&&Number(e.paidAmount)>0,value:e=>paidTnd(e)||0,native:e=>Number(e.paidAmount||0),label:'Payé'},
+    quotes:{title:'Devis non confirmés — détail',filter:e=>e.status==='Devis / non confirmé'&&(contractTnd(e)||0)>0,value:e=>contractTnd(e)||0,native:e=>Number(e.contractAmount||0),label:'Devis'}
+  };
+  return configs[kind]||configs.paid;
+}
+function openMetricDetails(kind){
+  const cfg=metricDetailConfig(kind);
+  const arr=state.expenses.filter(cfg.filter).sort((a,b)=>cfg.value(b)-cfg.value(a));
+  const total=sum(arr.map(cfg.value));
+  document.getElementById('metricDetailTitle').textContent=cfg.title;
+  const body=document.getElementById('metricDetailBody');
+  if(!arr.length){
+    body.innerHTML='<div class="empty">Aucun poste dans cette catégorie.</div>';
+  }else{
+    body.innerHTML=`<div class="detail-list">${arr.map(e=>metricDetailItem(e,kind,cfg)).join('')}</div>
+      <div class="detail-total"><span>${arr.length} poste${arr.length>1?'s':''}</span><strong>${money(total,'TND',2)}</strong></div>`;
+  }
+  document.getElementById('metricDetailModal').classList.add('open');
+}
+function metricDetailItem(e,kind,cfg){
+  const equiv=cfg.value(e);
+  const native=cfg.native(e);
+  const contract=e.contractAmount===null||e.contractAmount===''||e.contractAmount===undefined?null:Number(e.contractAmount);
+  const paid=Number(e.paidAmount||0);
+  const remain=remainingNative(e);
+  let finance='';
+  if(kind==='remaining'){
+    finance=`<div class="detail-finance">
+      <div><small>Total marché</small><strong>${contract===null?'—':money(contract,e.currency)}</strong></div>
+      <div><small>Déjà payé</small><strong>${money(paid,e.currency)}</strong></div>
+      <div><small>Reste</small><strong>${remain===null?'—':money(remain,e.currency)}</strong></div>
+    </div>`;
+  }else if(kind==='quotes'){
+    finance=`<div class="detail-finance">
+      <div><small>Montant devis</small><strong>${contract===null?'—':money(contract,e.currency)}</strong></div>
+      <div><small>Équiv. TND</small><strong>${money(equiv,'TND',2)}</strong></div>
+      <div><small>Statut</small><strong>Non confirmé</strong></div>
+    </div>`;
+  }else{
+    finance=`<div class="detail-finance">
+      <div><small>Montant original</small><strong>${money(native,e.currency)}</strong></div>
+      <div><small>Équiv. TND</small><strong>${money(equiv,'TND',2)}</strong></div>
+      <div><small>Statut</small><strong>${esc(e.status)}</strong></div>
+    </div>`;
+  }
+  return `<div class="detail-item" onclick="openExpenseFromMetric('${e.id}')">
+    <div class="detail-head">
+      <div class="detail-title">${esc(e.description)}</div>
+      <div class="detail-amount">${money(equiv,'TND',2)}</div>
+    </div>
+    <div class="detail-meta">
+      <span>${esc(e.lot)}</span>
+      <span>${esc(e.type)}</span>
+      <span>${esc(e.supplier||'Fournisseur non précisé')}</span>
+      ${e.currency!=='TND'?`<span>${money(native,e.currency)}</span>`:''}
+    </div>
+    ${finance}
+    <div class="small-note" style="margin-top:7px">Touchez pour ouvrir / modifier cette dépense</div>
+  </div>`;
+}
+function closeMetricDetails(){
+  document.getElementById('metricDetailModal').classList.remove('open');
+}
+function openExpenseFromMetric(id){
+  closeMetricDetails();
+  editExpense(id);
+}
+
 function renderExpenses(){
   const lotOptions=['Tous les lots',...allLots()];
   const typeOptions=['Tous','Matériel','Main-d’œuvre','Mixte / à ventiler'];
