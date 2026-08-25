@@ -1,0 +1,1457 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17211d">
+<title>Suivi coût maison</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coût Maison">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+<link rel="manifest" href="manifest.json">
+<style>
+:root{
+  --bg:#f4f2ec;--panel:#ffffff;--text:#18201c;--muted:#6c746f;--line:#e4e0d7;
+  --green:#1f6b4f;--green2:#e8f2ed;--gold:#ae8748;--gold2:#f6efe2;--red:#a13f3f;
+  --shadow:0 10px 30px rgba(28,34,31,.08);--radius:18px
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+header{position:sticky;top:0;z-index:30;background:rgba(244,242,236,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-inner{max-width:1250px;margin:auto;padding:14px 18px;display:flex;align-items:center;gap:12px}
+.brand{min-width:0;flex:1}
+.brand h1{font-size:19px;margin:0}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
+.btn{border:0;border-radius:12px;padding:11px 14px;font-weight:700;background:#e9e7e0;color:var(--text)}
+.btn.primary{background:var(--green);color:white}
+.btn.gold{background:var(--gold);color:white}
+.btn.danger{background:#f8e9e9;color:var(--red)}
+.btn.small{padding:7px 9px;border-radius:9px;font-size:12px}
+main{max-width:1250px;margin:0 auto;padding:18px 18px 95px}
+.nav{display:flex;gap:8px;overflow:auto;margin-bottom:16px;padding-bottom:2px}
+.nav button{white-space:nowrap;border:1px solid var(--line);background:var(--panel);padding:10px 14px;border-radius:999px;font-weight:700;color:var(--muted)}
+.nav button.active{background:var(--text);color:white;border-color:var(--text)}
+.grid-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.metric{padding:16px}
+.metric .label{color:var(--muted);font-size:12px;margin-bottom:7px}
+.metric .value{font-size:24px;font-weight:800;letter-spacing:-.5px}
+.metric .sub{font-size:11px;color:var(--muted);margin-top:5px}
+.section{margin-top:16px;padding:18px}
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-title h2{font-size:17px;margin:0;flex:1}
+.badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:750;background:var(--green2);color:var(--green)}
+.badge.gold{background:var(--gold2);color:#7e5b22}
+.badge.gray{background:#eee;color:#666}
+.lot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.lot-card{padding:15px}
+.lot-name{font-weight:800;margin-bottom:9px}
+.lot-row{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin-top:6px}
+.lot-row strong{color:var(--text)}
+.progress{height:7px;background:#ebe8e1;border-radius:99px;overflow:hidden;margin:12px 0 3px}
+.progress > div{height:100%;background:var(--green);border-radius:99px}
+.controls{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:8px;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;color:var(--muted);font-weight:650}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:11px;background:white;padding:10px 11px;color:var(--text);outline:none}
+input:focus,select:focus,textarea:focus{border-color:#9eb8aa;box-shadow:0 0 0 3px #e7f0eb}
+textarea{min-height:78px;resize:vertical}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;min-width:970px;background:white}
+th,td{text-align:left;padding:11px 10px;border-bottom:1px solid #ece9e2;font-size:12px;vertical-align:top}
+th{position:sticky;top:0;background:#faf9f6;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.03em;z-index:1}
+tr:last-child td{border-bottom:0}
+.money{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
+.muted{color:var(--muted)}
+.actions{display:flex;gap:5px}
+.rate-box{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.rate-card{padding:15px}
+.rate-card strong{font-size:21px}
+.help{font-size:12px;color:var(--muted);line-height:1.5}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.empty{padding:24px;text-align:center;color:var(--muted)}
+.modal{position:fixed;inset:0;background:rgba(15,20,17,.52);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.modal.open{display:flex}
+.dialog{width:min(760px,100%);max-height:92vh;overflow:auto;background:var(--bg);border-radius:22px 22px 0 0;padding:18px}
+.dialog-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.dialog-head h3{margin:0;flex:1}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.form-grid .wide{grid-column:1/-1}
+.summary-strip{display:flex;gap:8px;overflow:auto;margin-top:12px}
+.pill{background:white;border:1px solid var(--line);border-radius:12px;padding:9px 12px;white-space:nowrap;font-size:12px}
+.pill strong{margin-left:5px}
+.bottom-nav{display:none}
+.notice{background:#fff8e9;border:1px solid #ead7aa;color:#745620;border-radius:13px;padding:11px 13px;font-size:12px;line-height:1.45}
+.budget-input{display:flex;gap:6px;margin-top:10px}
+.budget-input input{padding:7px 9px;font-size:12px}
+.small-note{font-size:10px;color:var(--muted)}
+@media(max-width:980px){
+  .grid-cards{grid-template-columns:repeat(2,1fr)}
+  .lot-grid{grid-template-columns:repeat(2,1fr)}
+  .controls{grid-template-columns:1fr 1fr}
+  .controls .search{grid-column:1/-1}
+}
+@media(max-width:650px){
+  header .btn.primary{display:none}
+  main{padding:12px 12px 90px}
+  .nav{display:none}
+  .grid-cards{grid-template-columns:1fr 1fr;gap:8px}
+  .metric{padding:13px}
+  .metric .value{font-size:19px}
+  .lot-grid{grid-template-columns:1fr}
+  .section{padding:13px}
+  .controls{grid-template-columns:1fr}
+  .controls .search{grid-column:auto}
+  .rate-box{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .form-grid .wide{grid-column:auto}
+  .bottom-nav{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;bottom:0;left:0;right:0;z-index:35;background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:7px 6px calc(7px + env(safe-area-inset-bottom))}
+  .bottom-nav button{border:0;background:transparent;padding:8px 3px;font-size:10px;color:var(--muted);font-weight:750}
+  .bottom-nav button.active{color:var(--green)}
+  .bottom-nav .plus{background:var(--green);color:white;border-radius:13px;margin:0 4px}
+  .dialog{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+}
+
+.robot-hero{display:grid;grid-template-columns:1.25fr .75fr;gap:12px}
+.robot-panel{padding:18px}
+.robot-mic{width:92px;height:92px;border-radius:50%;border:0;background:var(--green);color:white;font-size:34px;box-shadow:0 10px 25px rgba(31,107,79,.25);transition:.2s}
+.robot-mic.listening{transform:scale(1.04);background:#a13f3f;box-shadow:0 0 0 9px rgba(161,63,63,.12)}
+.robot-status{font-weight:800;margin-top:10px}
+.robot-transcript{min-height:120px;font-size:15px;line-height:1.5}
+.robot-example{padding:10px 12px;border:1px dashed #d9d3c7;border-radius:12px;background:#faf8f3;font-size:12px;color:var(--muted);margin-top:8px}
+.robot-preview{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+.robot-preview .preview-item{background:#faf9f6;border:1px solid var(--line);border-radius:12px;padding:10px}
+.preview-item span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;margin-bottom:3px}
+.preview-item strong{font-size:13px}
+.robot-confidence{height:7px;background:#ebe8e1;border-radius:99px;overflow:hidden;margin-top:7px}
+.robot-confidence div{height:100%;background:var(--green)}
+.robot-tips{display:grid;gap:8px}
+.robot-tip{border:1px solid var(--line);border-radius:12px;padding:11px;background:white;font-size:12px;line-height:1.45}
+@media(max-width:760px){
+  .robot-hero{grid-template-columns:1fr}
+  .robot-preview{grid-template-columns:1fr 1fr}
+  .bottom-nav{grid-template-columns:repeat(6,1fr)!important}
+}
+@media(max-width:430px){
+  .robot-preview{grid-template-columns:1fr}
+}
+
+
+.invoice-drop{border:2px dashed #cfc8bb;border-radius:18px;padding:24px;text-align:center;background:#faf8f3;transition:.2s}
+.invoice-drop.drag{border-color:var(--green);background:#eef6f1}
+.invoice-drop input{display:none}
+.invoice-file{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid var(--line);border-radius:12px;background:white;margin-top:10px;text-align:left}
+.invoice-file .icon{font-size:24px}
+.invoice-file .meta{flex:1;min-width:0}
+.invoice-file .name{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.invoice-file .size{font-size:11px;color:var(--muted)}
+.ai-working{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;background:#edf4f0;margin-top:12px}
+.spinner{width:18px;height:18px;border:3px solid #cbdad2;border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai-result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.ai-result-grid .preview-item{background:#faf9f6;border:1px solid var(--line);border-radius:12px;padding:10px}
+.ai-raw{margin-top:10px}
+.ai-raw summary{cursor:pointer;font-weight:750;font-size:12px;color:var(--muted)}
+.ai-raw pre{white-space:pre-wrap;word-break:break-word;background:#111814;color:#e9f0ec;padding:12px;border-radius:12px;max-height:260px;overflow:auto;font-size:11px}
+.attach-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:4px 7px;background:white;font-size:10px;font-weight:750}
+@media(max-width:760px){.ai-result-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:430px){.ai-result-grid{grid-template-columns:1fr}}
+
+
+.lang-switch{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.lang-switch button{border:1px solid var(--line);background:white;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800}
+.lang-switch button.active{background:var(--text);color:white;border-color:var(--text)}
+.rtl-text{direction:rtl;text-align:right}
+
+
+html,body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent}
+body{padding-top:env(safe-area-inset-top)}
+header{padding-top:env(safe-area-inset-top)}
+button,.btn{touch-action:manipulation}
+@supports (-webkit-touch-callout:none){
+  input,select,textarea{font-size:16px}
+}
+
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <h1>🏠 Suivi coût de ma maison</h1>
+      <p>Tous les lots du chantier • Matériel • Main-d’œuvre • Devis • Paiements</p>
+    </div>
+    <button class="btn primary" onclick="openExpenseModal()">＋ Ajouter une dépense</button>
+  </div>
+</header>
+
+<main>
+  <div class="nav">
+    <button data-tab="dashboard" class="active" onclick="showTab('dashboard')">Dashboard</button>
+    <button data-tab="expenses" onclick="showTab('expenses')">Dépenses</button>
+    <button data-tab="lots" onclick="showTab('lots')">Lots</button>
+    <button data-tab="robot" onclick="showTab('robot')">🤖 Robot chantier</button>
+    <button data-tab="invoice" onclick="showTab('invoice')">📄 Facture AI</button>
+    <button data-tab="settings" onclick="showTab('settings')">Taux & sauvegarde</button>
+  </div>
+
+  <section id="tab-dashboard"></section>
+  <section id="tab-expenses" style="display:none"></section>
+  <section id="tab-lots" style="display:none"></section>
+  <section id="tab-robot" style="display:none"></section>
+  <section id="tab-invoice" style="display:none"></section>
+  <section id="tab-settings" style="display:none"></section>
+</main>
+
+<div class="bottom-nav">
+  <button data-btab="dashboard" class="active" onclick="showTab('dashboard')">🏠<br>Accueil</button>
+  <button data-btab="expenses" onclick="showTab('expenses')">🧾<br>Dépenses</button>
+  <button data-btab="robot" class="plus" onclick="showTab('robot')">🎙️<br>Robot</button>
+  <button data-btab="invoice" onclick="showTab('invoice')">📄<br>Facture</button>
+  <button data-btab="lots" onclick="showTab('lots')">📦<br>Lots</button>
+  <button data-btab="settings" onclick="showTab('settings')">⚙️<br>Réglages</button>
+</div>
+
+<div id="expenseModal" class="modal" onclick="if(event.target===this) closeExpenseModal()">
+  <div class="dialog">
+    <div class="dialog-head">
+      <h3 id="modalTitle">Ajouter une dépense</h3>
+      <button class="btn small" onclick="closeExpenseModal()">Fermer</button>
+    </div>
+    <form id="expenseForm" onsubmit="saveExpense(event)">
+      <input type="hidden" id="f-id">
+      <input type="hidden" id="f-attachmentid">
+      <input type="hidden" id="f-attachmentname">
+      <div class="form-grid">
+        <div class="field">
+          <label>Lot</label>
+          <select id="f-lot" required></select>
+        </div>
+        <div class="field">
+          <label>Catégorie</label>
+          <select id="f-type">
+            <option>Matériel</option>
+            <option>Main-d’œuvre</option>
+            <option>Mixte / à ventiler</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fournisseur / artisan</label>
+          <input id="f-supplier" placeholder="Ex. SFMC">
+        </div>
+        <div class="field">
+          <label>Statut</label>
+          <select id="f-status">
+            <option>Payé</option>
+            <option>Avance</option>
+            <option>Devis / non confirmé</option>
+          </select>
+        </div>
+        <div class="field wide">
+          <label>Description</label>
+          <input id="f-description" required placeholder="Ex. Carrelage salle de bain">
+        </div>
+        <div class="field">
+          <label>Montant total du devis / marché (optionnel)</label>
+          <input id="f-contract" type="number" step="0.001" min="0" placeholder="Laisser vide si inconnu">
+        </div>
+        <div class="field">
+          <label>Montant déjà payé</label>
+          <input id="f-paid" type="number" step="0.001" min="0" value="0" required>
+        </div>
+        <div class="field">
+          <label>Devise</label>
+          <select id="f-currency" onchange="toggleRateFields()">
+            <option>TND</option><option>USD</option><option>QAR</option><option>EUR</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input id="f-date" type="date">
+        </div>
+        <div class="field" id="customRateWrap">
+          <label>Taux TND personnalisé (optionnel)</label>
+          <input id="f-customrate" type="number" step="0.000001" min="0" placeholder="Sinon taux global">
+        </div>
+        <div class="field" id="usdEqWrap">
+          <label>Équivalent USD de référence (optionnel)</label>
+          <input id="f-usdeq" type="number" step="0.01" min="0" placeholder="Utile pour QAR">
+        </div>
+        <div class="field wide">
+          <label>Notes</label>
+          <textarea id="f-notes" placeholder="Facture, référence, détails..."></textarea>
+        </div>
+        <div class="field wide" id="f-attachment-wrap" style="display:none">
+          <label>Pièce jointe</label>
+          <div class="invoice-file">
+            <div class="icon">📎</div>
+            <div class="meta">
+              <div class="name" id="f-attachment-label"></div>
+              <div class="size">La facture sera liée à cette dépense.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+        <button type="button" class="btn" onclick="closeExpenseModal()">Annuler</button>
+        <button type="submit" class="btn primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const INITIAL_STATE = {"settings": {"usdRate": 2.9, "qarRate": null, "eurRate": null}, "lotBudgets": {}, "expenses": [{"id": "e001", "lot": "Gros œuvre / Structure", "type": "Matériel", "supplier": "SFMC", "description": "Matières premières", "currency": "TND", "contractAmount": 76000, "paidAmount": 76000, "status": "Payé", "date": "", "notes": "Total des virements à SFMC."}, {"id": "e002", "lot": "Gros œuvre / Structure", "type": "Matériel", "supplier": "Fournisseur béton", "description": "Béton prêt", "currency": "TND", "contractAmount": 53300, "paidAmount": 53300, "status": "Payé", "date": "", "notes": "Fournisseur non encore précisé."}, {"id": "e003", "lot": "Gros œuvre / Structure", "type": "Main-d’œuvre", "supplier": "Ahmed Ben Hmad", "description": "Main-d’œuvre construction", "currency": "TND", "contractAmount": 140211, "paidAmount": 140211, "status": "Payé", "date": "", "notes": "Total payé à Ahmed Ben Hmad."}, {"id": "e004", "lot": "Climatisation / Ventilation", "type": "Matériel", "supplier": "SPEED AIR", "description": "VRF + unités intérieures gainables", "currency": "TND", "contractAmount": 24388.336, "paidAmount": 24388.336, "status": "Payé", "date": "2026-02-28", "notes": "Devis DEV/0154/2026 – suite parentale, salon, séjour et cuisine."}, {"id": "e005", "lot": "Climatisation / Ventilation", "type": "Matériel", "supplier": "SPEED AIR", "description": "Diffuseurs linéaires Fantome", "currency": "TND", "contractAmount": 6597.36, "paidAmount": 6597.36, "status": "Payé", "date": "2026-03-12", "notes": "Devis DEV/0184/2026."}, {"id": "e006", "lot": "Climatisation / Ventilation", "type": "Matériel", "supplier": "AGT / Mourad Sassi", "description": "Gaines galvanisées et accessoires de distribution d’air", "currency": "TND", "contractAmount": 8545.022, "paidAmount": 8545.022, "status": "Payé", "date": "2026-04-13", "notes": "Offre 260285 – Villa WEFI."}, {"id": "e007", "lot": "Plomberie / Sanitaires", "type": "Main-d’œuvre", "supplier": "Plombier", "description": "Avance main-d’œuvre plomberie", "currency": "TND", "contractAmount": null, "paidAmount": 2000, "status": "Avance", "date": "", "notes": "Montant total du marché non encore précisé."}, {"id": "e008", "lot": "Plomberie / Sanitaires", "type": "Matériel", "supplier": "Plombier", "description": "Avance matériel plomberie", "currency": "TND", "contractAmount": null, "paidAmount": 5000, "status": "Avance", "date": "", "notes": "Montant total du matériel non encore précisé."}, {"id": "e009", "lot": "Aluminium", "type": "Mixte / à ventiler", "supplier": "Fournisseur aluminium", "description": "Menuiseries aluminium – devis général", "currency": "TND", "contractAmount": 102000, "paidAmount": 20000, "status": "Avance", "date": "", "notes": "Devis 102 000 TND. Avance 20 000 TND. À ventiler matériel / main-d’œuvre."}, {"id": "e010", "lot": "Revêtements / Finitions", "type": "Matériel", "supplier": "Arabesque", "description": "Faïence Arabesque", "currency": "TND", "contractAmount": 12580, "paidAmount": 6500, "status": "Avance", "date": "", "notes": "Solde connu : 6 080 TND."}, {"id": "e011", "lot": "Électricité", "type": "Main-d’œuvre", "supplier": "Électricien", "description": "Fourreautage – main-d’œuvre", "currency": "TND", "contractAmount": null, "paidAmount": 5000, "status": "Avance", "date": "", "notes": "Avance payée."}, {"id": "e012", "lot": "Électricité", "type": "Matériel", "supplier": "Électricien", "description": "Fourreautage – matériel", "currency": "TND", "contractAmount": null, "paidAmount": 5000, "status": "Avance", "date": "", "notes": "Avance payée."}, {"id": "e013", "lot": "Revêtements / Finitions", "type": "Matériel", "supplier": "Fournisseur dallage / marbre", "description": "Partie de dallage + poutres en marbre pour les arcs", "currency": "TND", "contractAmount": 22000, "paidAmount": 22000, "status": "Payé", "date": "", "notes": "Achat payé."}, {"id": "e014", "lot": "Menuiserie / Patrimoine", "type": "Matériel", "supplier": "Fournisseur portes", "description": "Portes intérieures", "currency": "TND", "contractAmount": 7000, "paidAmount": 7000, "status": "Payé", "date": "", "notes": "Achat payé."}, {"id": "e015", "lot": "Menuiserie / Patrimoine", "type": "Matériel", "supplier": "Fournisseur porte patio", "description": "Porte du patio", "currency": "TND", "contractAmount": 3500, "paidAmount": 3500, "status": "Payé", "date": "", "notes": "Achat payé."}, {"id": "e016", "lot": "Menuiserie / Patrimoine", "type": "Matériel", "supplier": "Fournisseur fenêtres anciennes", "description": "Anciennes fenêtres", "currency": "TND", "contractAmount": 7000, "paidAmount": 7000, "status": "Payé", "date": "", "notes": "Éléments anciens destinés à la maison."}, {"id": "e017", "lot": "Menuiserie / Patrimoine", "type": "Main-d’œuvre", "supplier": "Artisan restauration", "description": "Sablage, peinture et travaux de restauration", "currency": "TND", "contractAmount": 5000, "paidAmount": 5000, "status": "Payé", "date": "", "notes": "Restauration des éléments anciens."}, {"id": "e018", "lot": "Menuiserie / Patrimoine", "type": "Main-d’œuvre", "supplier": "Artisans menuisiers", "description": "Menuiserie artisanale", "currency": "TND", "contractAmount": 2500, "paidAmount": 2500, "status": "Payé", "date": "", "notes": "Montant approximatif communiqué : presque 2 500 TND.", "approximate": true}, {"id": "e019", "lot": "Plomberie / Sanitaires", "type": "Matériel", "supplier": "Foshan EMPOLO", "description": "Sanitaires / robinetterie – commande EMPOLO", "currency": "USD", "contractAmount": 1843.96, "paidAmount": 1843.96, "status": "Payé", "date": "", "notes": "Commande EM-250331 entièrement payée."}, {"id": "e020", "lot": "Cuisine / Équipements", "type": "Matériel", "supplier": "Dongguan Blue Shark Technology", "description": "2 prises escamotables motorisées IP65 pour plan de travail", "currency": "USD", "contractAmount": 198.26, "paidAmount": 198.26, "status": "Payé", "date": "2024-12-02", "notes": "Montant réellement payé, frais inclus."}, {"id": "e021", "lot": "Réseau informatique", "type": "Matériel", "supplier": "Shenzhen Huaxufeng / KuWFi", "description": "AP extérieurs + AP plafond + contrôleur CAPWAP + switch PoE", "currency": "USD", "contractAmount": 377.09, "paidAmount": 377.09, "status": "Payé", "date": "2024-10-23", "notes": "Coût net après remboursement de 108 USD."}, {"id": "e022", "lot": "Domotique / Smart Home", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Smart Home / interphone – achats confirmés du ZIP", "currency": "USD", "contractAmount": 487.15, "paidAmount": 487.15, "status": "Payé", "date": "", "notes": "Achats payés, regroupés par catégorie."}, {"id": "e023", "lot": "Réseau informatique", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Réseau supplémentaire : routeur, RJ45, CAT6A, AP/switch PoE", "currency": "USD", "contractAmount": 423.62, "paidAmount": 423.62, "status": "Payé", "date": "", "notes": "Inclut notamment 610 m CAT6A et 150 connecteurs RJ45."}, {"id": "e024", "lot": "Plomberie / Sanitaires", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Plomberie / sanitaires importés", "currency": "USD", "contractAmount": 668.31, "paidAmount": 668.31, "status": "Payé", "date": "", "notes": "Coût net des achats confirmés."}, {"id": "e025", "lot": "Électricité", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Matériel électrique importé", "currency": "USD", "contractAmount": 868.41, "paidAmount": 868.41, "status": "Payé", "date": "", "notes": "Disjoncteurs, interrupteurs, prises et accessoires."}, {"id": "e026", "lot": "Piscine / Extérieur", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Éclairage piscine et projecteurs extérieurs", "currency": "USD", "contractAmount": 1857.74, "paidAmount": 1857.74, "status": "Payé", "date": "", "notes": "Achats confirmés : luminaires piscine et éclairage extérieur."}, {"id": "e027", "lot": "Climatisation / Ventilation", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Ventilation / extracteurs", "currency": "USD", "contractAmount": 270.16, "paidAmount": 270.16, "status": "Payé", "date": "", "notes": "6 extracteurs 150 mm + ventilateur plafond, selon récapitulatif."}, {"id": "e028", "lot": "Menuiserie / Patrimoine", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Poignées / décoration menuiserie", "currency": "USD", "contractAmount": 392.22, "paidAmount": 392.22, "status": "Payé", "date": "", "notes": "Poignées acrylique dorées et éléments associés."}, {"id": "e029", "lot": "Sauna / Hammam", "type": "Matériel", "supplier": "Foshan Stepon Technology", "description": "Générateur de vapeur Wi‑Fi sauna / hammam", "currency": "QAR", "contractAmount": 1158.24, "paidAmount": 1158.24, "status": "Payé", "date": "2025-12-28", "usdEquivalent": 308.98, "notes": "Reçu : 1 158,24 QAR payés, équivalent 308,98 USD. L'équivalent TND suit le taux USD/TND global."}, {"id": "e030", "lot": "Domotique / Smart Home", "type": "Matériel", "supplier": "Shenzhen Golden Security Technology", "description": "Panneaux Tuya/Zigbee, interrupteurs, rideaux et accessoires", "currency": "USD", "contractAmount": 2716.67, "paidAmount": 0, "status": "Devis / non confirmé", "date": "2024-10-17", "notes": "Proforma GS20241017. Paiement non confirmé : ne compte pas dans les dépenses payées."}, {"id": "e031", "lot": "Sécurité / Alarme / Interphone", "type": "Matériel", "supplier": "Hangzhou Roombanker / Dusun", "description": "Centrales 4G, PIR, contacts portes, fumée et sirènes", "currency": "USD", "contractAmount": 397.0, "paidAmount": 0, "status": "Devis / non confirmé", "date": "2024-10-22", "notes": "Proforma 2410346917. Paiement non confirmé."}]};
+const LOTS = [
+"Études / Architecte / Ingénierie",
+"Terrassement / Fondations",
+"Gros œuvre / Structure",
+"Maçonnerie / Cloisons / Enduits",
+"Étanchéité / Isolation",
+"Toiture / Skydome",
+"Plomberie / Sanitaires",
+"Électricité",
+"Climatisation / Ventilation",
+"Aluminium / Vitrage",
+"Menuiserie / Patrimoine",
+"Revêtements / Sols / Faïence",
+"Peinture / Finitions",
+"Plafonds / Staff / Décoration plâtre",
+"Cuisine / Électroménager",
+"Dressings / Rangements",
+"Décoration / Mobilier",
+"Éclairage décoratif",
+"Domotique / Smart Home",
+"Réseau informatique",
+"Sécurité / Alarme / Interphone",
+"Caméras / Vidéosurveillance",
+"Piscine / Extérieurs",
+"Jardin / Paysagisme / Irrigation",
+"Patio / Fontaine / Jardin intérieur",
+"Terrasses / Clôtures / Murs extérieurs",
+"Portails / Automatismes",
+"Sauna / Hammam",
+"Énergie / Solaire / Groupe / UPS",
+"Locaux techniques / Pompes / Traitement",
+"Transport / Livraison / Douane",
+"Honoraires / Permis / Administratif",
+"Nettoyage / Mise en service",
+"Imprévus / Divers",
+"Autres"
+];
+
+let state = loadState();
+
+function migrateLotNames(){
+  const aliases = {
+    "Aluminium":"Aluminium / Vitrage",
+    "Revêtements / Finitions":"Revêtements / Sols / Faïence",
+    "Cuisine / Équipements":"Cuisine / Électroménager",
+    "Piscine / Extérieur":"Piscine / Extérieurs"
+  };
+  let changed=false;
+  state.expenses.forEach(e=>{
+    if(aliases[e.lot]){
+      e.lot=aliases[e.lot];
+      changed=true;
+    }
+  });
+  if(changed) persist();
+}
+migrateLotNames();
+
+let currentTab = 'dashboard';
+let robotRecognition = null;
+let robotListening = false;
+let robotLastProposal = null;
+let invoiceCurrentFile = null;
+let invoiceExtractedText = '';
+let invoiceLastProposal = null;
+let assistantLanguage = localStorage.getItem('maisonAssistantLanguage') || 'fr';
+
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function loadState(){
+  try{
+    const saved = localStorage.getItem('maisonCostStateV3');
+    if(saved) return JSON.parse(saved);
+  }catch(e){}
+  return clone(INITIAL_STATE);
+}
+function persist(){
+  localStorage.setItem('maisonCostStateV3', JSON.stringify(state));
+}
+function fmt(n, digits=2){
+  if(n===null || n===undefined || Number.isNaN(Number(n))) return '—';
+  return new Intl.NumberFormat('fr-FR',{minimumFractionDigits:digits,maximumFractionDigits:digits}).format(Number(n));
+}
+function money(n,c='TND',digits){
+  const d = digits===undefined ? (c==='TND' ? 3 : 2) : digits;
+  return `${fmt(n,d)} ${c}`;
+}
+function rateFor(e){
+  if(e.currency==='TND') return 1;
+  if(e.customRate) return Number(e.customRate);
+  if(e.currency==='USD') return Number(state.settings.usdRate)||0;
+  if(e.currency==='QAR') {
+    if(e.usdEquivalent && e.paidAmount>0) return (Number(e.usdEquivalent)*Number(state.settings.usdRate||0))/Number(e.paidAmount);
+    return Number(state.settings.qarRate)||0;
+  }
+  if(e.currency==='EUR') return Number(state.settings.eurRate)||0;
+  return 0;
+}
+function amountToTnd(amount,e){
+  const r = rateFor(e);
+  return r>0 ? Number(amount||0)*r : null;
+}
+function paidTnd(e){ return amountToTnd(e.paidAmount,e); }
+function contractTnd(e){ return e.contractAmount===null || e.contractAmount==='' || e.contractAmount===undefined ? null : amountToTnd(e.contractAmount,e); }
+function remainingNative(e){
+  if(e.status==='Devis / non confirmé') return null;
+  if(e.contractAmount===null || e.contractAmount==='' || e.contractAmount===undefined) return null;
+  return Math.max(0,Number(e.contractAmount)-Number(e.paidAmount||0));
+}
+function remainingTnd(e){
+  const r=remainingNative(e); return r===null?null:amountToTnd(r,e);
+}
+function sum(arr){return arr.reduce((a,b)=>a+(Number(b)||0),0)}
+function paidExpenses(){return state.expenses.filter(e=>Number(e.paidAmount)>0)}
+function totals(){
+  const paid = sum(paidExpenses().map(e=>paidTnd(e)||0));
+  const remaining = sum(state.expenses.map(e=>remainingTnd(e)||0));
+  const material = sum(paidExpenses().filter(e=>e.type==='Matériel').map(e=>paidTnd(e)||0));
+  const labor = sum(paidExpenses().filter(e=>e.type==='Main-d’œuvre').map(e=>paidTnd(e)||0));
+  const mixed = sum(paidExpenses().filter(e=>e.type==='Mixte / à ventiler').map(e=>paidTnd(e)||0));
+  const quotes = sum(state.expenses.filter(e=>e.status==='Devis / non confirmé').map(e=>contractTnd(e)||0));
+  return {paid,remaining,material,labor,mixed,quotes};
+}
+function nativeCurrencyTotals(){
+  const obj={};
+  paidExpenses().forEach(e=>obj[e.currency]=(obj[e.currency]||0)+Number(e.paidAmount||0));
+  return obj;
+}
+function lotStats(lot){
+  const ex=state.expenses.filter(e=>e.lot===lot);
+  const paid=sum(ex.map(e=>paidTnd(e)||0));
+  const material=sum(ex.filter(e=>e.type==='Matériel').map(e=>paidTnd(e)||0));
+  const labor=sum(ex.filter(e=>e.type==='Main-d’œuvre').map(e=>paidTnd(e)||0));
+  const mixed=sum(ex.filter(e=>e.type==='Mixte / à ventiler').map(e=>paidTnd(e)||0));
+  const remaining=sum(ex.map(e=>remainingTnd(e)||0));
+  const budget=Number(state.lotBudgets[lot]||0);
+  return {ex,paid,material,labor,mixed,remaining,budget};
+}
+function allLots(){
+  const s=new Set(LOTS);
+  state.expenses.forEach(e=>s.add(e.lot));
+  return [...s];
+}
+function showTab(tab){
+  currentTab=tab;
+  ['dashboard','expenses','lots','robot','invoice','settings'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
+    document.querySelectorAll(`[data-tab="${t}"],[data-btab="${t}"]`).forEach(b=>b.classList.toggle('active',t===tab));
+  });
+  renderCurrent();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderCurrent(){
+  if(currentTab==='dashboard') renderDashboard();
+  if(currentTab==='expenses') renderExpenses();
+  if(currentTab==='lots') renderLots();
+  if(currentTab==='robot') renderRobot();
+  if(currentTab==='invoice') renderInvoiceAI();
+  if(currentTab==='settings') renderSettings();
+}
+function renderDashboard(){
+  const t=totals(), cur=nativeCurrencyTotals();
+  const lots=allLots().map(l=>[l,lotStats(l)]).filter(x=>x[1].ex.length).sort((a,b)=>b[1].paid-a[1].paid);
+  const unknownRate = paidExpenses().some(e=>e.currency!=='TND' && !rateFor(e));
+  document.getElementById('tab-dashboard').innerHTML=`
+    <div class="grid-cards">
+      <div class="card metric"><div class="label">Total payé équivalent</div><div class="value">${fmt(t.paid,2)} TND</div><div class="sub">Taux USD/TND ${fmt(state.settings.usdRate,3)}</div></div>
+      <div class="card metric"><div class="label">Reste connu</div><div class="value">${fmt(t.remaining,2)} TND</div><div class="sub">Seulement les marchés avec total connu</div></div>
+      <div class="card metric"><div class="label">Matériel payé</div><div class="value">${fmt(t.material,2)} TND</div><div class="sub">Équivalent TND</div></div>
+      <div class="card metric"><div class="label">Main-d’œuvre payée</div><div class="value">${fmt(t.labor,2)} TND</div><div class="sub">Équivalent TND</div></div>
+      <div class="card metric"><div class="label">Devis non confirmés</div><div class="value">${fmt(t.quotes,2)} TND</div><div class="sub">Non comptés comme payés</div></div>
+    </div>
+    <div class="summary-strip">
+      ${Object.entries(cur).map(([c,v])=>`<div class="pill">${c}<strong>${money(v,c)}</strong></div>`).join('')}
+      ${t.mixed?`<div class="pill">À ventiler<strong>${fmt(t.mixed,2)} TND</strong></div>`:''}
+    </div>
+    ${unknownRate?`<div class="notice" style="margin-top:12px">Certaines devises n'ont pas de taux TND. Elles restent visibles dans leur devise d'origine mais ne sont pas incluses dans l'équivalent TND.</div>`:''}
+    <div class="card section">
+      <div class="section-title"><h2>Dépenses par lot</h2><span class="badge">${lots.length} lots actifs</span></div>
+      <div class="lot-grid">
+        ${lots.map(([lot,s])=>{
+          const pct=s.budget>0?Math.min(100,(s.paid/s.budget)*100):null;
+          return `<div class="card lot-card">
+            <div class="lot-name">${esc(lot)}</div>
+            <div class="lot-row"><span>Payé</span><strong>${fmt(s.paid,2)} TND</strong></div>
+            <div class="lot-row"><span>Matériel</span><strong>${fmt(s.material,2)}</strong></div>
+            <div class="lot-row"><span>Main-d’œuvre</span><strong>${fmt(s.labor,2)}</strong></div>
+            ${s.mixed?`<div class="lot-row"><span>À ventiler</span><strong>${fmt(s.mixed,2)}</strong></div>`:''}
+            ${s.remaining?`<div class="lot-row"><span>Reste connu</span><strong>${fmt(s.remaining,2)}</strong></div>`:''}
+            ${pct!==null?`<div class="progress"><div style="width:${pct}%"></div></div><div class="small-note">${fmt(pct,1)} % du budget de lot</div>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="card section">
+      <div class="section-title"><h2>Accès rapide</h2></div>
+      <div class="toolbar">
+        <button class="btn primary" onclick="openExpenseModal()">＋ Nouvelle dépense</button>
+        <button class="btn gold" onclick="showTab('robot')">🎙️ Dicter une dépense</button>
+        <button class="btn" onclick="showTab('invoice')">📄 Analyser une facture</button>
+        <button class="btn" onclick="showTab('expenses')">Voir toutes les dépenses</button>
+        <button class="btn" onclick="showTab('settings')">Modifier le taux USD</button>
+      </div>
+    </div>`;
+}
+function renderExpenses(){
+  const lotOptions=['Tous les lots',...allLots()];
+  const typeOptions=['Tous','Matériel','Main-d’œuvre','Mixte / à ventiler'];
+  const statusOptions=['Tous','Payé','Avance','Devis / non confirmé'];
+  document.getElementById('tab-expenses').innerHTML=`
+  <div class="card section">
+    <div class="section-title"><h2>Dépenses</h2><button class="btn primary small" onclick="openExpenseModal()">＋ Ajouter</button></div>
+    <div class="controls">
+      <div class="field search"><label>Rechercher</label><input id="q" placeholder="Fournisseur, description..." oninput="filterExpenses()"></div>
+      <div class="field"><label>Lot</label><select id="fltLot" onchange="filterExpenses()">${lotOptions.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div>
+      <div class="field"><label>Catégorie</label><select id="fltType" onchange="filterExpenses()">${typeOptions.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div>
+      <div class="field"><label>Statut</label><select id="fltStatus" onchange="filterExpenses()">${statusOptions.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div>
+    </div>
+    <div id="expenseTable"></div>
+  </div>`;
+  filterExpenses();
+}
+function filterExpenses(){
+  const q=(document.getElementById('q')?.value||'').toLowerCase();
+  const lot=document.getElementById('fltLot')?.value||'Tous les lots';
+  const type=document.getElementById('fltType')?.value||'Tous';
+  const status=document.getElementById('fltStatus')?.value||'Tous';
+  const arr=state.expenses.filter(e=>{
+    const text=`${e.supplier} ${e.description} ${e.notes||''} ${e.lot}`.toLowerCase();
+    return (!q||text.includes(q))&&(lot==='Tous les lots'||e.lot===lot)&&(type==='Tous'||e.type===type)&&(status==='Tous'||e.status===status);
+  });
+  const el=document.getElementById('expenseTable'); if(!el)return;
+  if(!arr.length){el.innerHTML='<div class="empty">Aucune dépense trouvée.</div>';return;}
+  el.innerHTML=`<div class="table-wrap"><table>
+    <thead><tr><th>Lot</th><th>Catégorie</th><th>Dépense</th><th>Fournisseur</th><th>Devis / total</th><th>Payé</th><th>Équiv. TND</th><th>Reste</th><th>Statut</th><th>Facture</th><th></th></tr></thead>
+    <tbody>${arr.map(e=>{
+      const rt=remainingNative(e), eq=paidTnd(e);
+      return `<tr>
+        <td>${esc(e.lot)}</td>
+        <td><span class="badge ${e.type==='Main-d’œuvre'?'gold':e.type.startsWith('Mixte')?'gray':''}">${esc(e.type)}</span></td>
+        <td><strong>${esc(e.description)}</strong>${e.approximate?'<div class="small-note">≈ montant approximatif</div>':''}${e.date?`<div class="small-note">${esc(e.date)}</div>`:''}</td>
+        <td>${esc(e.supplier||'—')}</td>
+        <td class="money">${e.contractAmount===null||e.contractAmount===''?'—':money(e.contractAmount,e.currency)}</td>
+        <td class="money">${money(e.paidAmount,e.currency)}</td>
+        <td class="money">${eq===null?'Taux manquant':money(eq,'TND',2)}</td>
+        <td class="money">${rt===null?'—':money(rt,e.currency)}</td>
+        <td>${esc(e.status)}</td>
+        <td>${e.attachmentId?`<button class="btn small" onclick="openAttachment('${e.attachmentId}')">📎 Voir</button>`:'—'}</td>
+        <td><div class="actions"><button class="btn small" onclick="editExpense('${e.id}')">Modifier</button><button class="btn danger small" onclick="deleteExpense('${e.id}')">Suppr.</button></div></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+function renderLots(){
+  const lots=allLots().map(l=>[l,lotStats(l)]);
+  document.getElementById('tab-lots').innerHTML=`
+    <div class="card section">
+      <div class="section-title"><h2>Lots & budgets</h2><span class="badge">Budget modifiable</span></div>
+      <div class="help" style="margin-bottom:12px">Tu peux fixer un budget pour chaque lot. L'application compare automatiquement le budget avec le total déjà payé.</div>
+      <div class="lot-grid">
+        ${lots.map(([lot,s])=>{
+          const pct=s.budget>0?Math.min(100,(s.paid/s.budget)*100):0;
+          return `<div class="card lot-card">
+            <div class="lot-name">${esc(lot)} ${s.ex.length===0?'<span class="badge gray">À planifier</span>':''}</div>
+            <div class="lot-row"><span>Matériel payé</span><strong>${fmt(s.material,2)} TND</strong></div>
+            <div class="lot-row"><span>Main-d’œuvre</span><strong>${fmt(s.labor,2)} TND</strong></div>
+            ${s.mixed?`<div class="lot-row"><span>À ventiler</span><strong>${fmt(s.mixed,2)} TND</strong></div>`:''}
+            <div class="lot-row"><span>Total payé</span><strong>${fmt(s.paid,2)} TND</strong></div>
+            <div class="lot-row"><span>Reste contractuel connu</span><strong>${fmt(s.remaining,2)} TND</strong></div>
+            <div class="budget-input"><input id="budget-${slug(lot)}" type="number" step="1" min="0" value="${s.budget||''}" placeholder="Budget du lot en TND"><button class="btn small" onclick="saveBudget('${jsq(lot)}')">OK</button></div>
+            ${s.budget>0?`<div class="progress"><div style="width:${pct}%"></div></div><div class="small-note">${fmt(pct,1)} % consommé • reste budget ${fmt(Math.max(0,s.budget-s.paid),2)} TND</div>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+
+function assistantLangConfig(){
+  return {
+    fr:{speech:'fr-FR',ocr:'fra+eng+ara',label:'Français'},
+    en:{speech:'en-US',ocr:'eng+fra+ara',label:'English'},
+    ar:{speech:'ar-TN',ocr:'ara+fra+eng',label:'العربية'}
+  }[assistantLanguage] || {speech:'fr-FR',ocr:'fra+eng+ara',label:'Français'};
+}
+function setAssistantLanguage(lang){
+  assistantLanguage=lang;
+  localStorage.setItem('maisonAssistantLanguage',lang);
+  if(currentTab==='robot')renderRobot();
+  if(currentTab==='invoice')renderInvoiceAI();
+}
+function languageButtons(){
+  return `<div class="lang-switch">
+    <button class="${assistantLanguage==='fr'?'active':''}" onclick="setAssistantLanguage('fr')">🇫🇷 Français</button>
+    <button class="${assistantLanguage==='en'?'active':''}" onclick="setAssistantLanguage('en')">🇬🇧 English</button>
+    <button class="${assistantLanguage==='ar'?'active':''}" onclick="setAssistantLanguage('ar')">🇹🇳 العربية</button>
+  </div>`;
+}
+
+function renderRobot(){
+  const supported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  document.getElementById('tab-robot').innerHTML=`
+    <div class="robot-hero">
+      <div class="card robot-panel">
+        <div class="section-title">
+          <h2>🤖 Robot Chantier</h2>
+          <span class="badge">${supported?'Micro disponible':'Mode texte'}</span>
+        </div>
+        <div class="help">Dicte une dépense naturellement en français, anglais ou arabe. Le robot analyse le montant, le lot, le fournisseur, la catégorie et le statut. <strong>Rien n'est enregistré sans ta validation.</strong></div>
+        ${languageButtons()}
+        <div style="text-align:center;margin:18px 0 14px">
+          <button id="robotMic" class="robot-mic" onclick="toggleRobotMic()" title="Démarrer / arrêter le micro">🎙️</button>
+          <div id="robotStatus" class="robot-status">${supported?'Appuie sur le micro pour parler':'Le micro vocal n’est pas disponible dans ce navigateur'}</div>
+          <div class="small-note">${supported?'Parle en français. Tu peux corriger le texte avant analyse.':'Écris ou colle le texte de ton vocal ci-dessous.'}</div>
+        </div>
+        <div class="field">
+          <label>Ce que le robot a entendu</label>
+          <textarea id="robotTranscript" class="robot-transcript" placeholder="Ex. J’ai payé une avance de 5 000 dinars au plombier pour le matériel de plomberie."></textarea>
+        </div>
+        <div class="toolbar" style="margin-top:10px">
+          <button class="btn primary" onclick="analyzeRobotText()">✨ Analyser</button>
+          <button class="btn" onclick="clearRobot()">Effacer</button>
+          <button class="btn" onclick="openExpenseModal()">Saisie classique</button>
+        </div>
+        <div class="robot-example"><strong>Exemple :</strong> « J’ai payé 3 500 dinars à l’électricien comme avance main-d’œuvre pour l’étage. »</div>
+        <div id="robotProposal"></div>
+      </div>
+      <div class="card robot-panel">
+        <div class="section-title"><h2>Comment lui parler</h2></div>
+        <div class="robot-tips">
+          <div class="robot-tip"><strong>Montant</strong><br>« J’ai payé 5 000 dinars… »</div>
+          <div class="robot-tip"><strong>Avance + devis</strong><br>« Devis aluminium 102 000 dinars, j’ai donné 20 000 d’avance. »</div>
+          <div class="robot-tip"><strong>Main-d’œuvre</strong><br>« 2 000 dinars au plombier pour la main-d’œuvre. »</div>
+          <div class="robot-tip"><strong>Matériel</strong><br>« J’ai acheté du carrelage pour 6 500 dinars. »</div>
+          <div class="robot-tip"><strong>USD</strong><br>« J’ai payé 800 dollars pour le Smart Home. » Le taux global USD/TND est appliqué automatiquement.</div>
+        </div>
+        <div class="notice" style="margin-top:12px">Le robot est volontairement en mode <strong>proposition + validation</strong> pour éviter qu’une mauvaise reconnaissance vocale modifie tes comptes.</div>
+      </div>
+    </div>`;
+  if(robotLastProposal) renderRobotProposal(robotLastProposal);
+}
+
+function toggleRobotMic(){
+  if(robotListening){ stopRobotMic(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    const s=document.getElementById('robotStatus');
+    if(s) s.textContent='Micro non pris en charge : utilise la zone de texte.';
+    return;
+  }
+  robotRecognition = new SR();
+  robotRecognition.lang=assistantLangConfig().speech;
+  robotRecognition.continuous=true;
+  robotRecognition.interimResults=true;
+  let finalText=document.getElementById('robotTranscript')?.value?.trim()||'';
+  robotRecognition.onstart=()=>{
+    robotListening=true;
+    const b=document.getElementById('robotMic'); if(b)b.classList.add('listening');
+    const s=document.getElementById('robotStatus'); if(s)s.textContent='Je t’écoute… appuie à nouveau pour arrêter';
+  };
+  robotRecognition.onresult=(ev)=>{
+    let interim='';
+    for(let i=ev.resultIndex;i<ev.results.length;i++){
+      const tx=ev.results[i][0].transcript;
+      if(ev.results[i].isFinal) finalText += (finalText?' ':'') + tx.trim();
+      else interim += tx;
+    }
+    const ta=document.getElementById('robotTranscript');
+    if(ta) ta.value=(finalText+(interim?' '+interim:'')).trim();
+  };
+  robotRecognition.onerror=(ev)=>{
+    const s=document.getElementById('robotStatus');
+    if(s)s.textContent=ev.error==='not-allowed'?'Autorise le microphone dans le navigateur.':'Erreur micro : '+ev.error;
+  };
+  robotRecognition.onend=()=>{
+    robotListening=false;
+    const b=document.getElementById('robotMic'); if(b)b.classList.remove('listening');
+    const s=document.getElementById('robotStatus'); if(s)s.textContent='Micro arrêté — tu peux analyser le texte';
+  };
+  try{robotRecognition.start()}catch(e){}
+}
+function stopRobotMic(){
+  try{if(robotRecognition)robotRecognition.stop()}catch(e){}
+}
+function clearRobot(){
+  stopRobotMic();
+  robotLastProposal=null;
+  const ta=document.getElementById('robotTranscript');if(ta)ta.value='';
+  const p=document.getElementById('robotProposal');if(p)p.innerHTML='';
+}
+
+function arabicDigitsToLatin(s){
+  const map={'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9',
+             '۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9'};
+  return String(s||'').replace(/[٠-٩۰-۹]/g,ch=>map[ch]||ch);
+}
+
+function normalizeRobotText(s){
+  return String(s||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[’']/g," ").replace(/\s+/g,' ').trim();
+}
+function parseNumericToken(raw){
+  if(!raw)return null;
+  const s=String(raw).replace(/\s/g,'').replace(/,/g,'.');
+  const n=Number(s); return Number.isFinite(n)?n:null;
+}
+function frenchNumberWords(text){
+  const t=normalizeRobotText(text).replace(/-/g,' ');
+  const units={zero:0,un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10,onze:11,douze:12,treize:13,quatorze:14,quinze:15,seize:16};
+  const tens={vingt:20,trente:30,quarante:40,cinquante:50,soixante:60};
+  const words=t.split(/\s+/);
+  let total=0,current=0,seen=false;
+  for(const w of words){
+    if(w in units){current+=units[w];seen=true;continue}
+    if(w in tens){current+=tens[w];seen=true;continue}
+    if(w==='cent'||w==='cents'){current=(current||1)*100;seen=true;continue}
+    if(w==='mille'||w==='milles'){total+=(current||1)*1000;current=0;seen=true;continue}
+    if(w==='million'||w==='millions'){total+=(current||1)*1000000;current=0;seen=true;continue}
+    if(w==='et')continue;
+    if(seen)break;
+  }
+  return seen?total+current:null;
+}
+function extractAmountAround(text, keywords){
+  const n=normalizeRobotText(text);
+  for(const kw of keywords){
+    const pos=n.indexOf(kw);
+    if(pos>=0){
+      const chunk=n.slice(pos, pos+85);
+      let m=chunk.match(/(\d[\d\s]*(?:[.,]\d{1,3})?)/);
+      if(m)return parseNumericToken(m[1]);
+      const words=frenchNumberWords(chunk.slice(kw.length));
+      if(words)return words;
+    }
+  }
+  return null;
+}
+function detectCurrency(n){
+  if(/\b(usd|dollar|dollars)\b|دولار|دولارات/.test(n))return 'USD';
+  if(/\b(qar|riyal|riyals|qatar)\b|ريال|ريالات|قطر/.test(n))return 'QAR';
+  if(/\b(eur|euro|euros)\b|يورو/.test(n))return 'EUR';
+  if(/\b(tnd|dt|dinar|dinars)\b|دينار|دنانير|تونسي/.test(n))return 'TND';
+  return 'TND';
+}
+function detectLot(n){
+  const rules=[
+    ['Études / Architecte / Ingénierie',/(architect|engineer|engineering|study|design office|architecte|ingenieur|etude|bureau d etude|مهندس|معماري|دراسة|مكتب دراسات)/],
+    ['Terrassement / Fondations',/(terrassement|excavation|foundation|foundations|fouille|semelle|حفر|أساس|اساس|أساسات|اساسات)/],
+    ['Gros œuvre / Structure',/(gros oeuvre|structure|concrete|beton|cement|ciment|rebar|acier|dalle|poutre|poteau|sfmc|macon|خرسانة|اسمنت|حديد|عمود|أعمدة|اعمدة)/],
+    ['Maçonnerie / Cloisons / Enduits',/(maconnerie|masonry|partition|brick|cloison|brique|enduit|crepissage|بناء|طوب|آجر|اجر|قصارة|لياسة)/],
+    ['Étanchéité / Isolation',/(etanche|waterproof|insulation|isolation|isolant|عزل|عازل)/],
+    ['Toiture / Skydome',/(toiture|roof|skydome|verriere|سكاي دوم|قبة زجاج)/],
+    ['Plomberie / Sanitaires',/(plomb|plumbing|sanitary|sanitaire|robinet|lavabo|basin|wc|toilet|shower|douche|empolo|siphon|سباكة|صحي|حنفية|مرحاض|دوش|مغسلة)/],
+    ['Électricité',/(electric|electrical|fourreau|fourreautage|circuit breaker|disjoncteur|cable electrique|tableau electrique|prise electrique|كهرباء|كهربائي|قاطع|كابل|أسلاك|اسلاك|مأخذ|برايز)/],
+    ['Climatisation / Ventilation',/(clim|air condition|gainable|vrf|ventilation|extractor|extracteur|diffuseur|speed air|gaine air|تكييف|مكيف|تهوية|شفاط)/],
+    ['Aluminium / Vitrage',/(aluminium|aluminum|vitrage|glazing|vitre|fenetre alu|المنيوم|ألمنيوم|زجاج)/],
+    ['Menuiserie / Patrimoine',/(menuiser|carpentry|porte interieur|porte patio|fenetre ancienne|sablage|bois|patrimoine|نجارة|باب|أبواب|ابواب|خشب|نافذة|نوافذ|ترميم)/],
+    ['Revêtements / Sols / Faïence',/(faience|tile|tiles|carrelage|dallage|marble|marbre|revetement|flooring|arabesque|بلاط|رخام|سيراميك|تبليط|أرضية|ارضية)/],
+    ['Peinture / Finitions',/(peinture|paint|painting|painter|finition peinture|دهان|طلاء|صباغة)/],
+    ['Plafonds / Staff / Décoration plâtre',/(staff|platre|plaster|false ceiling|faux plafond|corniche|جبس|سقف مستعار|كورنيش)/],
+    ['Cuisine / Électroménager',/(cuisine|kitchen|appliance|electromenager|oven|hotte|hob|plaque cuisson|fridge|frigo|refrigerateur|مطبخ|فرن|ثلاجة|أجهزة مطبخ)/],
+    ['Dressings / Rangements',/(dressing|closet|wardrobe|placard|rangement|خزانة|خزائن|دريسنج)/],
+    ['Décoration / Mobilier',/(decoration|decor|furniture|mobilier|meuble|sofa|canape|table|chaise|tapis|ديكور|اثاث|أثاث|كنبة|طاولة|كرسي|سجاد)/],
+    ['Éclairage décoratif',/(lustre|chandelier|luminaire|decorative light|eclairage decoratif|applique|spot decoratif|نجفة|ثريا|إضاءة|اضاءة ديكورية)/],
+    ['Domotique / Smart Home',/(smart home|domotique|tuya|zigbee|home assistant|touch panel|panneau tactile|rideau intelligent|منزل ذكي|سمارت هوم|زيغبي|تويا)/],
+    ['Réseau informatique',/(network|reseau|wifi|poe|switch|access point|point d acces|cat6|rj45|router|routeur|kuwfi|شبكة|واي فاي|راوتر|سويتش)/],
+    ['Sécurité / Alarme / Interphone',/(alarm|alarme|intercom|interphone|siren|sirene|detector|detecteur|sensor|capteur porte|dusun|roombanker|إنذار|انذار|انترفون|حساس|صفارة)/],
+    ['Caméras / Vidéosurveillance',/(camera|nvr|cctv|videosurveillance|video surveillance|كاميرا|كاميرات|مراقبة)/],
+    ['Piscine / Extérieurs',/(pool|piscine|projecteur exterieur|eclairage piscine|مسبح|حوض سباحة|إنارة خارجية|اضاءة خارجية)/],
+    ['Jardin / Paysagisme / Irrigation',/(garden|jardin|landscape|paysag|irrigation|arrosage|palmier|gazon|plante|حديقة|ري|نخيل|عشب|نبات)/],
+    ['Patio / Fontaine / Jardin intérieur',/(patio|fontaine|fountain|courtyard|jardin interieur|bassin interieur|فناء|نافورة|حديقة داخلية)/],
+    ['Terrasses / Clôtures / Murs extérieurs',/(terrace|terrasse|fence|cloture|mur exterieur|سور|تراس|جدار خارجي)/],
+    ['Portails / Automatismes',/(gate|portail|gate motor|motorisation portail|automatisme|بوابة|باب آلي|باب الي)/],
+    ['Sauna / Hammam',/(sauna|hammam|hamem|steam|vapeur|حمام|ساونا|بخار)/],
+    ['Énergie / Solaire / Groupe / UPS',/(solar|solaire|generator|groupe electrogene|ups|inverter|onduleur|battery|batterie|طاقة شمسية|مولد|بطارية|انفرتر)/],
+    ['Locaux techniques / Pompes / Traitement',/(technical room|local technique|pump|pompe|water treatment|traitement eau|filtration|غرفة تقنية|مضخة|فلترة|معالجة مياه)/],
+    ['Transport / Livraison / Douane',/(transport|delivery|livraison|shipping|customs|douane|dedouanement|fret|نقل|توصيل|شحن|جمارك)/],
+    ['Honoraires / Permis / Administratif',/(fee|fees|honoraire|permit|permis|autorisation|administratif|taxe|أتعاب|اتعاب|رخصة|ترخيص|إداري|اداري)/],
+    ['Nettoyage / Mise en service',/(cleaning|nettoyage|commissioning|mise en service|تنظيف|تشغيل|تسليم)/]
+  ];
+  for(const [lot,re] of rules)if(re.test(n))return lot;
+  return 'Autres';
+}
+function detectType(n,lot){
+  if(/main d oeuvre|main oeuvre|labor|labour|workmanship|artisan|pose seule|salaire|يد عاملة|اجرة|أجرة|مصنعية|تركيب فقط/.test(n))return 'Main-d’œuvre';
+  if(/materiel|matiere|material|materials|purchase|bought|equipment|fourniture|equipement|appareil|commande|مواد|معدات|شراء|اشتريت|مستلزمات/.test(n))return 'Matériel';
+  if(/ahmed ben hmad/.test(n))return 'Main-d’œuvre';
+  if(/sfmc|empolo|speed air|arabesque|alibaba|kuwfi/.test(n))return 'Matériel';
+  return 'Matériel';
+}
+function detectSupplier(n, original){
+  const known=[...new Set(state.expenses.map(e=>e.supplier).filter(Boolean))].sort((a,b)=>b.length-a.length);
+  const nn=normalizeRobotText(original);
+  for(const s of known){
+    if(s && nn.includes(normalizeRobotText(s)))return s;
+  }
+  const aliases=[
+    [/ahmed ben hmad/,'Ahmed Ben Hmad'],[/sfmc/,'SFMC'],[/speed air/,'SPEED AIR'],
+    [/empolo/,'Foshan EMPOLO'],[/arabesque/,'Arabesque'],[/plombier/,'Plombier'],
+    [/electricien/,'Électricien'],[/aluminium/,'Fournisseur aluminium']
+  ];
+  for(const [re,name] of aliases)if(re.test(n))return name;
+  // Try "chez X" or "à X" until a separator word.
+  const m=original.match(/(?:chez|à|au|a)\s+([A-Za-zÀ-ÿ0-9 .&'-]{2,45}?)(?=\s+(?:pour|comme|de|du|des|le|la|les|montant|avance)\b|[,.]|$)/i);
+  return m?m[1].trim():'';
+}
+function detectDate(n){
+  const d=new Date();
+  if(/\baujourd hui\b/.test(n))return d.toISOString().slice(0,10);
+  if(/\bhier\b/.test(n)){d.setDate(d.getDate()-1);return d.toISOString().slice(0,10)}
+  const m=n.match(/\b(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})\b/);
+  if(m){
+    let y=Number(m[3]);if(y<100)y+=2000;
+    return `${y}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  }
+  return '';
+}
+function analyzeRobotText(){
+  const original=document.getElementById('robotTranscript')?.value?.trim()||'';
+  if(!original){alert('Dicte ou écris d’abord une dépense.');return}
+  const n=normalizeRobotText(original);
+  const currency=detectCurrency(n);
+  const status=/\b(devis|quotation|quote|offer|proforma|estimate)\b|عرض سعر|فاتورة مبدئية/.test(n)
+    && !/\b(paye|payee|paid|payment|verse|donne|avance|acompte|deposit|bought|achete)\b|دفعت|مدفوع|عربون|تسبقة|مقدم|اشتريت/.test(n)
+    ?'Devis / non confirmé'
+    :(/\b(avance|acompte|deposit|down payment)\b|عربون|تسبقة|مقدم/.test(n)?'Avance':'Payé');
+
+  let contract=extractAmountAround(n,['devis','quotation','quote','estimate','marche','total','cout total','montant total','عرض سعر','الإجمالي','الاجمالي','المجموع']);
+  let paid=extractAmountAround(n,['avance','acompte','deposit','down payment','paid','payment','i paid','i bought','j ai paye','paye','j ai donne','donne','verse','j ai achete','achete','دفعت','دفع','عربون','تسبقة','اشتريت']);
+  if(paid===null){
+    let m=n.match(/(\d[\d\s]*(?:[.,]\d{1,3})?)/);
+    if(m)paid=parseNumericToken(m[1]);
+    else paid=frenchNumberWords(n);
+  }
+  if(status==='Devis / non confirmé'){
+    if(contract===null)contract=paid;
+    paid=0;
+  }
+  if(status==='Avance' && contract!==null && paid===null){
+    // If only one amount followed "devis", avoid treating total as the advance.
+    paid=0;
+  }
+  const lot=detectLot(n);
+  const type=detectType(n,lot);
+  const supplier=detectSupplier(n,original);
+
+  let confidence=35;
+  if(paid!==null&&paid>0)confidence+=25;
+  if(lot!=='Autres')confidence+=20;
+  if(supplier)confidence+=10;
+  if(/\b(tnd|dinar|dinars|usd|dollar|qar|riyal|euro)\b/.test(n))confidence+=5;
+  if(/\b(main d oeuvre|materiel|avance|acompte|devis)\b/.test(n))confidence+=5;
+  confidence=Math.min(100,confidence);
+
+  robotLastProposal={
+    lot,type,supplier,
+    description:original,
+    currency,
+    contractAmount:contract,
+    paidAmount:paid??0,
+    status,
+    date:detectDate(n),
+    notes:'Saisie préparée par Robot Chantier à partir du vocal : '+original,
+    confidence
+  };
+  renderRobotProposal(robotLastProposal);
+}
+function renderRobotProposal(p){
+  const el=document.getElementById('robotProposal');if(!el)return;
+  const remain=p.contractAmount!==null&&p.contractAmount!==undefined?Math.max(0,Number(p.contractAmount)-Number(p.paidAmount||0)):null;
+  el.innerHTML=`
+    <div class="card" style="padding:14px;margin-top:14px">
+      <div class="section-title"><h2>Proposition du robot</h2><span class="badge">${p.confidence}% confiance</span></div>
+      <div class="robot-confidence"><div style="width:${p.confidence}%"></div></div>
+      <div class="robot-preview">
+        <div class="preview-item"><span>Lot</span><strong>${esc(p.lot)}</strong></div>
+        <div class="preview-item"><span>Catégorie</span><strong>${esc(p.type)}</strong></div>
+        <div class="preview-item"><span>Fournisseur</span><strong>${esc(p.supplier||'À compléter')}</strong></div>
+        <div class="preview-item"><span>Statut</span><strong>${esc(p.status)}</strong></div>
+        <div class="preview-item"><span>Payé</span><strong>${money(p.paidAmount||0,p.currency)}</strong></div>
+        <div class="preview-item"><span>Total devis</span><strong>${p.contractAmount===null||p.contractAmount===undefined?'Non précisé':money(p.contractAmount,p.currency)}</strong></div>
+        ${remain!==null?`<div class="preview-item"><span>Reste estimé</span><strong>${money(remain,p.currency)}</strong></div>`:''}
+        <div class="preview-item"><span>Devise</span><strong>${esc(p.currency)}</strong></div>
+      </div>
+      <div class="notice" style="margin-top:10px">Vérifie la proposition avant de l’enregistrer. Le bouton ci-dessous ouvre la fiche normale avec les champs déjà remplis.</div>
+      <div class="toolbar" style="margin-top:10px">
+        <button class="btn primary" onclick="robotToExpenseForm()">✓ Vérifier et enregistrer</button>
+        <button class="btn" onclick="analyzeRobotText()">↻ Réanalyser</button>
+      </div>
+    </div>`;
+}
+function robotToExpenseForm(){
+  const p=robotLastProposal;if(!p)return;
+  openExpenseModal();
+  document.getElementById('f-lot').value=p.lot;
+  document.getElementById('f-type').value=p.type;
+  document.getElementById('f-supplier').value=p.supplier||'';
+  document.getElementById('f-status').value=p.status;
+  document.getElementById('f-description').value=p.description||'';
+  document.getElementById('f-contract').value=p.contractAmount??'';
+  document.getElementById('f-paid').value=p.paidAmount??0;
+  document.getElementById('f-currency').value=p.currency||'TND';
+  document.getElementById('f-date').value=p.date||'';
+  document.getElementById('f-notes').value=p.notes||'';
+  document.getElementById('modalTitle').textContent='Valider la saisie du Robot Chantier';
+  toggleRateFields();
+}
+
+
+// ---------- Pièces jointes : stockage local IndexedDB ----------
+function openInvoiceDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open('MaisonCostFiles',1);
+    req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains('files'))db.createObjectStore('files',{keyPath:'id'})};
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function saveAttachment(file){
+  const id='att-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+  const db=await openInvoiceDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('files','readwrite');
+    tx.objectStore('files').put({id,name:file.name,type:file.type,size:file.size,blob:file,createdAt:new Date().toISOString()});
+    tx.oncomplete=()=>resolve(id);
+    tx.onerror=()=>reject(tx.error);
+  });
+}
+async function getAttachment(id){
+  const db=await openInvoiceDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('files','readonly');
+    const r=tx.objectStore('files').get(id);
+    r.onsuccess=()=>resolve(r.result||null);
+    r.onerror=()=>reject(r.error);
+  });
+}
+async function openAttachment(id){
+  const rec=await getAttachment(id);
+  if(!rec){alert('Pièce jointe introuvable sur cet appareil.');return}
+  const u=URL.createObjectURL(rec.blob);
+  window.open(u,'_blank');
+  setTimeout(()=>URL.revokeObjectURL(u),60000);
+}
+
+// ---------- Facture AI ----------
+function renderInvoiceAI(){
+  document.getElementById('tab-invoice').innerHTML=`
+    <div class="robot-hero">
+      <div class="card robot-panel">
+        <div class="section-title">
+          <h2>📄 Facture AI</h2>
+          <span class="badge">PDF • JPG • PNG • WEBP</span>
+        </div>
+        <div class="help">Dépose une facture ou un devis en français, anglais ou arabe. L'assistant extrait le texte du PDF ou utilise la reconnaissance de texte pour une image, puis prépare une entrée à vérifier.</div>
+        ${languageButtons()}
+
+        <div id="invoiceDrop" class="invoice-drop" style="margin-top:14px"
+          ondragover="invoiceDrag(event,true)" ondragleave="invoiceDrag(event,false)" ondrop="invoiceDropFile(event)">
+          <div style="font-size:38px">📥</div>
+          <strong>Dépose la facture ici</strong>
+          <div class="small-note" style="margin:5px 0 12px">ou choisis un fichier sur ton téléphone / ordinateur</div>
+          <label class="btn primary">Choisir PDF ou image
+            <input id="invoiceFileInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onchange="handleInvoiceFile(this.files[0])">
+          </label>
+        </div>
+        <div id="invoiceSelected"></div>
+        <div id="invoiceWorking"></div>
+        <div id="invoiceResult"></div>
+      </div>
+
+      <div class="card robot-panel">
+        <div class="section-title"><h2>Ce que l'assistant cherche</h2></div>
+        <div class="robot-tips">
+          <div class="robot-tip"><strong>Fournisseur</strong><br>Nom de la société ou de l'artisan.</div>
+          <div class="robot-tip"><strong>Référence</strong><br>N° facture, devis, proforma ou commande.</div>
+          <div class="robot-tip"><strong>Montant</strong><br>Priorité au Net à payer, Total TTC, Amount paid ou Order total.</div>
+          <div class="robot-tip"><strong>Date</strong><br>Date de facture ou de paiement lorsqu'elle est lisible.</div>
+          <div class="robot-tip"><strong>Classement</strong><br>Lot de construction + Matériel / Main-d'œuvre.</div>
+          <div class="robot-tip"><strong>Validation</strong><br>L'assistant remplit la fiche, mais tu confirmes toujours avant l'enregistrement.</div>
+        </div>
+        <div class="notice" style="margin-top:12px">Les PDF avec texte sont généralement les plus fiables. Pour une photo ou un scan, la qualité de l'image influence la reconnaissance.</div>
+      </div>
+    </div>`;
+}
+function invoiceDrag(ev,on){
+  ev.preventDefault();
+  const d=document.getElementById('invoiceDrop');if(d)d.classList.toggle('drag',on);
+}
+function invoiceDropFile(ev){
+  ev.preventDefault(); invoiceDrag(ev,false);
+  const f=ev.dataTransfer.files?.[0]; if(f)handleInvoiceFile(f);
+}
+function humanFileSize(bytes){
+  if(bytes<1024)return bytes+' o';
+  if(bytes<1024*1024)return (bytes/1024).toFixed(1)+' Ko';
+  return (bytes/1024/1024).toFixed(1)+' Mo';
+}
+async function handleInvoiceFile(file){
+  if(!file)return;
+  const ok=file.type==='application/pdf'||/^image\/(jpeg|png|webp)$/.test(file.type);
+  if(!ok){alert('Format non pris en charge. Utilise PDF, JPG, PNG ou WEBP.');return}
+  invoiceCurrentFile=file;
+  invoiceExtractedText='';
+  invoiceLastProposal=null;
+  document.getElementById('invoiceSelected').innerHTML=`
+    <div class="invoice-file">
+      <div class="icon">${file.type==='application/pdf'?'📄':'🖼️'}</div>
+      <div class="meta"><div class="name">${esc(file.name)}</div><div class="size">${humanFileSize(file.size)}</div></div>
+      <button class="btn small" onclick="clearInvoiceAI()">Changer</button>
+    </div>`;
+  document.getElementById('invoiceResult').innerHTML='';
+  await analyzeInvoiceFile();
+}
+function clearInvoiceAI(){
+  invoiceCurrentFile=null; invoiceExtractedText=''; invoiceLastProposal=null;
+  renderInvoiceAI();
+}
+function setInvoiceWorking(text){
+  const el=document.getElementById('invoiceWorking');if(!el)return;
+  el.innerHTML=text?`<div class="ai-working"><div class="spinner"></div><div><strong>${esc(text)}</strong><div class="small-note">Ne ferme pas cette page pendant l'analyse.</div></div></div>`:'';
+}
+async function analyzeInvoiceFile(){
+  if(!invoiceCurrentFile)return;
+  try{
+    let text='';
+    if(invoiceCurrentFile.type==='application/pdf'){
+      setInvoiceWorking('Lecture du PDF…');
+      text=await extractPdfText(invoiceCurrentFile);
+      if(text.replace(/\s/g,'').length<80){
+        setInvoiceWorking('PDF scanné détecté — reconnaissance de la première page…');
+        text += '\n'+await ocrPdfFirstPage(invoiceCurrentFile);
+      }
+    }else{
+      setInvoiceWorking('Reconnaissance du texte de l’image…');
+      text=await ocrImageFile(invoiceCurrentFile);
+    }
+    invoiceExtractedText=text||'';
+    setInvoiceWorking('Analyse des informations de la facture…');
+    await new Promise(r=>setTimeout(r,120));
+    invoiceLastProposal=analyzeInvoiceExtractedText(invoiceExtractedText, invoiceCurrentFile.name);
+    setInvoiceWorking('');
+    renderInvoiceResult(invoiceLastProposal);
+  }catch(err){
+    console.error(err);
+    setInvoiceWorking('');
+    document.getElementById('invoiceResult').innerHTML=`<div class="notice" style="margin-top:12px">L'analyse automatique n'a pas pu être terminée : ${esc(err.message||String(err))}. Tu peux toujours utiliser la saisie classique ou réessayer avec une image plus nette.</div>`;
+  }
+}
+async function extractPdfText(file){
+  if(!window.pdfjsLib)throw new Error('Le moteur PDF n’a pas pu être chargé. Vérifie la connexion Internet.');
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let parts=[];
+  const maxPages=Math.min(pdf.numPages,12);
+  for(let p=1;p<=maxPages;p++){
+    const page=await pdf.getPage(p);
+    const content=await page.getTextContent();
+    parts.push(content.items.map(i=>i.str).join(' '));
+  }
+  return parts.join('\n');
+}
+async function ocrPdfFirstPage(file){
+  if(!window.pdfjsLib)throw new Error('Moteur PDF indisponible.');
+  if(!window.Tesseract)throw new Error('Moteur de reconnaissance d’image indisponible.');
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  const page=await pdf.getPage(1);
+  const viewport=page.getViewport({scale:1.7});
+  const canvas=document.createElement('canvas');
+  canvas.width=viewport.width;canvas.height=viewport.height;
+  await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+  const result=await Tesseract.recognize(canvas,assistantLangConfig().ocr,{logger:m=>{
+    if(m.status==='recognizing text')setInvoiceWorking(`Lecture de l'image… ${Math.round((m.progress||0)*100)} %`);
+  }});
+  return result.data.text||'';
+}
+async function ocrImageFile(file){
+  if(!window.Tesseract)throw new Error('Le moteur de reconnaissance d’image n’a pas pu être chargé. Vérifie la connexion Internet.');
+  const result=await Tesseract.recognize(file,assistantLangConfig().ocr,{logger:m=>{
+    if(m.status==='recognizing text')setInvoiceWorking(`Lecture de l'image… ${Math.round((m.progress||0)*100)} %`);
+  }});
+  return result.data.text||'';
+}
+function invoiceCurrency(text){
+  const n=normalizeRobotText(text);
+  if(/\bqar\b|qatar riyal|riyal|ريال|ريالات|قطر/.test(n))return 'QAR';
+  if(/\busd\b|\bdollar|دولار|دولارات/.test(n)||/\$\s*\d/.test(text))return 'USD';
+  if(/\beur\b|\beuro|يورو/.test(n)||/€/.test(text))return 'EUR';
+  if(/\btnd\b|\bdt\b|\bdinar|دينار|دنانير|تونسي/.test(n))return 'TND';
+  return 'TND';
+}
+function cleanMoneyNumber(s){
+  if(!s)return null;
+  let x=String(s).trim().replace(/\u00a0/g,' ').replace(/\s/g,'');
+  // Handle common European/Tunisian formats.
+  if(x.includes(',')&&x.includes('.')){
+    if(x.lastIndexOf(',')>x.lastIndexOf('.')) x=x.replace(/\./g,'').replace(',','.');
+    else x=x.replace(/,/g,'');
+  }else if(x.includes(',')){
+    const pieces=x.split(',');
+    if(pieces[pieces.length-1].length<=3)x=pieces.slice(0,-1).join('')+'.'+pieces[pieces.length-1];
+    else x=x.replace(/,/g,'');
+  }else{
+    const dots=(x.match(/\./g)||[]).length;
+    if(dots>1){
+      const ps=x.split('.');x=ps.slice(0,-1).join('')+'.'+ps[ps.length-1];
+    }
+  }
+  x=x.replace(/[^\d.-]/g,'');
+  const n=Number(x);return Number.isFinite(n)?n:null;
+}
+function findInvoiceAmount(text){
+  const lines=String(text).split(/\n| {2,}/).map(x=>x.trim()).filter(Boolean);
+  const priorities=[
+    /amount paid/i,/paid amount/i,/net\s*(a|à)\s*payer/i,/net to pay/i,/total\s*t\.?t\.?c/i,/total ttc/i,
+    /grand total/i,/order total/i,/invoice total/i,/total amount/i,/montant total/i,
+    /المبلغ المدفوع/i,/صافي للدفع/i,/الإجمالي/i,/الاجمالي/i,/المجموع/i,/المبلغ الإجمالي/i,/المبلغ الاجمالي/i,
+    /total/i
+  ];
+  for(const re of priorities){
+    for(const line of lines){
+      if(re.test(line)){
+        const nums=[...line.matchAll(/(?:USD|TND|QAR|EUR|\$|€|DT)?\s*([0-9][0-9\s.,]{0,20})/gi)]
+          .map(m=>cleanMoneyNumber(m[1])).filter(x=>x!==null&&x>0);
+        if(nums.length)return nums[nums.length-1];
+      }
+    }
+  }
+  // Search across line breaks after keyword
+  for(const re of priorities){
+    const m=text.match(new RegExp(re.source+'[\\s:\\-]*?(?:USD|TND|QAR|EUR|\\$|€)?\\s*([0-9][0-9\\s.,]{0,20})','i'));
+    if(m){const v=cleanMoneyNumber(m[1]);if(v)return v}
+  }
+  return null;
+}
+function findInvoiceNumber(text){
+  const patterns=[
+    /(?:invoice|facture|devis|proforma|pi|order|فاتورة|عرض سعر|طلب)\s*(?:no|n°|number|num[eé]ro|رقم|#|\.?\s*no)?\s*[:#.-]?\s*([A-Z0-9٠-٩۰-۹][A-Z0-9٠-٩۰-۹\-\/]{3,})/i,
+    /\b(?:DEV|PI|INV)[-\/]?[A-Z0-9\-\/]{3,}\b/i
+  ];
+  for(const re of patterns){
+    const m=text.match(re);if(m)return (m[1]||m[0]).trim();
+  }
+  return '';
+}
+function findInvoiceDate(text){
+  const patterns=[
+    /\b(20\d{2})[\/.-](\d{1,2})[\/.-](\d{1,2})\b/,
+    /\b(\d{1,2})[\/.-](\d{1,2})[\/.-](20\d{2})\b/,
+    /\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(20\d{2})\b/i
+  ];
+  let m=text.match(patterns[0]); if(m)return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  m=text.match(patterns[1]); if(m)return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  m=text.match(patterns[2]);
+  if(m){
+    const months={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+    const mo=months[m[1].slice(0,3).toLowerCase()];
+    return `${m[3]}-${String(mo).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`;
+  }
+  return '';
+}
+function findSupplierFromInvoice(text,filename){
+  const lines=String(text).split(/\n/).map(x=>x.trim()).filter(Boolean).slice(0,18);
+  const reject=/^(invoice|facture|devis|proforma|receipt|recu|reçu|date|client|customer|to:|bill to|ship to|address|tel|phone|email)/i;
+  for(const line of lines){
+    if(line.length>=4&&line.length<=90&&!reject.test(line)&&/[A-Za-zÀ-ÿ]{3}/.test(line)){
+      if(/(?:company|co\.?|ltd|sarl|sa\b|service|technology|materials|security|air|empolo|sfmc)/i.test(line))return line.replace(/\s{2,}.*/,'').trim();
+    }
+  }
+  return filename.replace(/\.(pdf|png|jpe?g|webp)$/i,'').slice(0,70);
+}
+function invoiceStatus(text){
+  const n=normalizeRobotText(text);
+  if(/\b(amount paid|paid on|payment information|receipt|recu|reçu|paye|payee|paid)\b|مدفوع|تم الدفع|وصل|إيصال|ايصال/.test(n))return 'Payé';
+  if(/\b(proforma|devis|quotation|quote|offer|estimate|offre de prix)\b|عرض سعر|فاتورة مبدئية/.test(n))return 'Devis / non confirmé';
+  return 'Devis / non confirmé';
+}
+function analyzeInvoiceExtractedText(text,filename){
+  const n=normalizeRobotText(text);
+  const currency=invoiceCurrency(text);
+  const amount=findInvoiceAmount(text);
+  const status=invoiceStatus(text);
+  const invNo=findInvoiceNumber(text);
+  const date=findInvoiceDate(text);
+  const supplier=findSupplierFromInvoice(text,filename);
+  const lot=detectLot(n);
+  const type=detectType(n,lot);
+  let confidence=25;
+  if(amount)confidence+=25;
+  if(supplier)confidence+=15;
+  if(invNo)confidence+=10;
+  if(date)confidence+=10;
+  if(lot!=='Autres')confidence+=10;
+  if(currency)confidence+=5;
+  confidence=Math.min(100,confidence);
+  return {
+    supplier,invoiceNo:invNo,date,currency,amount:amount||0,lot,type,status,confidence,
+    description: invNo?`Facture / devis ${invNo}`:`Facture ${supplier||filename}`,
+    notes:`Analyse automatique de la pièce jointe ${filename}. ${invNo?'Référence détectée : '+invNo+'. ':''}Vérifier les données avant validation.`
+  };
+}
+function renderInvoiceResult(p){
+  const el=document.getElementById('invoiceResult');if(!el)return;
+  el.innerHTML=`
+    <div class="card" style="padding:14px;margin-top:14px">
+      <div class="section-title"><h2>Proposition Facture AI</h2><span class="badge">${p.confidence}% confiance</span></div>
+      <div class="robot-confidence"><div style="width:${p.confidence}%"></div></div>
+      <div class="ai-result-grid">
+        <div class="preview-item"><span>Fournisseur</span><strong>${esc(p.supplier||'À compléter')}</strong></div>
+        <div class="preview-item"><span>N° facture / devis</span><strong>${esc(p.invoiceNo||'Non détecté')}</strong></div>
+        <div class="preview-item"><span>Date</span><strong>${esc(p.date||'Non détectée')}</strong></div>
+        <div class="preview-item"><span>Montant</span><strong>${money(p.amount||0,p.currency)}</strong></div>
+        <div class="preview-item"><span>Lot</span><strong>${esc(p.lot)}</strong></div>
+        <div class="preview-item"><span>Catégorie</span><strong>${esc(p.type)}</strong></div>
+        <div class="preview-item"><span>Statut</span><strong>${esc(p.status)}</strong></div>
+        <div class="preview-item"><span>Pièce jointe</span><strong>${esc(invoiceCurrentFile?.name||'')}</strong></div>
+      </div>
+      <div class="notice" style="margin-top:10px">Vérifie surtout le <strong>montant total</strong> et le <strong>statut Payé/Devis</strong>. Les factures complexes peuvent contenir plusieurs totaux.</div>
+      <div class="toolbar" style="margin-top:10px">
+        <button class="btn primary" onclick="invoiceToExpenseForm()">✓ Vérifier et créer l’entrée</button>
+        <button class="btn" onclick="analyzeInvoiceFile()">↻ Réanalyser</button>
+      </div>
+      <details class="ai-raw"><summary>Voir le texte extrait</summary><pre>${esc(invoiceExtractedText.slice(0,18000))}</pre></details>
+    </div>`;
+}
+async function invoiceToExpenseForm(){
+  const p=invoiceLastProposal;if(!p||!invoiceCurrentFile)return;
+  let attachmentId=null;
+  try{
+    attachmentId=await saveAttachment(invoiceCurrentFile);
+  }catch(e){
+    console.error(e);
+    if(!confirm("La facture n'a pas pu être conservée localement. Continuer sans pièce jointe ?"))return;
+  }
+  openExpenseModal();
+  document.getElementById('f-lot').value=p.lot;
+  document.getElementById('f-type').value=p.type;
+  document.getElementById('f-supplier').value=p.supplier||'';
+  document.getElementById('f-status').value=p.status;
+  document.getElementById('f-description').value=p.description||'';
+  document.getElementById('f-contract').value=p.amount||'';
+  document.getElementById('f-paid').value=p.status==='Payé'?(p.amount||0):0;
+  document.getElementById('f-currency').value=p.currency||'TND';
+  document.getElementById('f-date').value=p.date||'';
+  document.getElementById('f-notes').value=p.notes||'';
+  document.getElementById('f-attachmentid').value=attachmentId||'';
+  document.getElementById('f-attachmentname').value=invoiceCurrentFile.name||'';
+  if(attachmentId){
+    document.getElementById('f-attachment-wrap').style.display='flex';
+    document.getElementById('f-attachment-label').textContent=invoiceCurrentFile.name;
+  }
+  document.getElementById('modalTitle').textContent='Valider la facture analysée';
+  toggleRateFields();
+}
+
+function renderSettings(){
+  document.getElementById('tab-settings').innerHTML=`
+  <div class="card section">
+    <div class="section-title"><h2>Taux de change</h2><span class="badge">USD prérempli à 2,900</span></div>
+    <div class="rate-box">
+      <div class="card rate-card">
+        <div class="field"><label>1 USD = ? TND</label><input id="usdRate" type="number" step="0.001" min="0" value="${state.settings.usdRate??''}" oninput="setRate('usdRate',this.value)"></div>
+        <div class="help">Valeur par défaut : 2,900. Tous les achats USD sans taux personnalisé se recalculent automatiquement.</div>
+      </div>
+      <div class="card rate-card">
+        <div class="field"><label>1 QAR = ? TND</label><input id="qarRate" type="number" step="0.0001" min="0" value="${state.settings.qarRate??''}" placeholder="Optionnel" oninput="setRate('qarRate',this.value)"></div>
+        <div class="help">Le générateur vapeur utilise déjà son équivalent USD figurant sur le reçu, donc il suit le taux USD.</div>
+      </div>
+      <div class="card rate-card">
+        <div class="field"><label>1 EUR = ? TND</label><input id="eurRate" type="number" step="0.0001" min="0" value="${state.settings.eurRate??''}" placeholder="Optionnel" oninput="setRate('eurRate',this.value)"></div>
+        <div class="help">À renseigner seulement lorsque tu ajoutes des achats en euros.</div>
+      </div>
+    </div>
+  </div>
+  <div class="card section">
+    <div class="section-title"><h2>Sauvegarde & export</h2></div>
+    <div class="toolbar">
+      <button class="btn primary" onclick="exportJSON()">Sauvegarder JSON</button>
+      <label class="btn">Importer JSON<input type="file" accept=".json,application/json" style="display:none" onchange="importJSON(this.files[0])"></label>
+      <button class="btn" onclick="exportCSV()">Exporter CSV</button>
+      <button class="btn" onclick="window.print()">Imprimer / PDF</button>
+      <button class="btn danger" onclick="resetData()">Réinitialiser les données</button>
+    </div>
+    <p class="help">Les données sont sauvegardées automatiquement dans ce navigateur. L'export JSON permet de faire une copie de sécurité ou de transférer les données vers un autre appareil.</p>
+  </div>
+  <div class="notice">Conseil : fais régulièrement une sauvegarde JSON, surtout avant de changer d'ordinateur ou de navigateur.</div>
+
+  <div class="card section">
+    <div class="section-title"><h2>Installation sur iPhone / iPad</h2><span class="badge">iOS</span></div>
+    <div class="help">
+      Ouvre l'application depuis <strong>Safari</strong>, appuie sur le bouton <strong>Partager</strong>,
+      puis choisis <strong>Sur l’écran d’accueil</strong>. L'application s'ouvrira ensuite comme une app.
+    </div>
+  </div>
+
+  <div class="card section">
+    <div class="section-title"><h2>Facture AI</h2></div>
+    <div class="help">Les PDF texte sont analysés directement. Pour les images et les PDF scannés, l'OCR prend en charge le français, l'anglais et l'arabe et utilise un moteur de reconnaissance de texte chargé depuis Internet. Les fichiers joints sont conservés localement dans le navigateur via IndexedDB et restent liés à la dépense sur cet appareil.</div>
+  </div>
+  <div class="card section">
+    <div class="section-title"><h2>Robot vocal</h2></div>
+    <div class="help">Le micro peut être réglé sur Français, English ou العربية. Chrome/Edge offrent généralement la meilleure compatibilité. Si le micro n'est pas disponible, le Robot Chantier fonctionne aussi avec du texte dicté ailleurs puis collé dans l'application.</div>
+  </div>`;
+}
+function setRate(key,v){
+  state.settings[key]=v===''?null:Number(v); persist();
+  if(currentTab==='dashboard')renderDashboard();
+}
+function saveBudget(lot){
+  const el=document.getElementById('budget-'+slug(lot)); if(!el)return;
+  state.lotBudgets[lot]=Number(el.value||0);persist();renderLots();
+}
+function populateLotSelect(){
+  const sel=document.getElementById('f-lot');
+  sel.innerHTML=allLots().map(l=>`<option>${esc(l)}</option>`).join('');
+}
+function openExpenseModal(){
+  populateLotSelect();
+  document.getElementById('expenseForm').reset();
+  document.getElementById('f-id').value='';
+  document.getElementById('f-attachmentid').value='';
+  document.getElementById('f-attachmentname').value='';
+  document.getElementById('f-attachment-wrap').style.display='none';
+  document.getElementById('f-paid').value='0';
+  document.getElementById('f-currency').value='TND';
+  document.getElementById('f-status').value='Payé';
+  document.getElementById('modalTitle').textContent='Ajouter une dépense';
+  toggleRateFields();
+  document.getElementById('expenseModal').classList.add('open');
+}
+function closeExpenseModal(){document.getElementById('expenseModal').classList.remove('open')}
+function toggleRateFields(){
+  const c=document.getElementById('f-currency').value;
+  document.getElementById('customRateWrap').style.display=c==='TND'?'none':'flex';
+  document.getElementById('usdEqWrap').style.display=(c==='QAR')?'flex':'none';
+}
+function editExpense(id){
+  const e=state.expenses.find(x=>x.id===id);if(!e)return;
+  populateLotSelect();
+  document.getElementById('f-id').value=e.id;
+  document.getElementById('f-attachmentid').value=e.attachmentId||'';
+  document.getElementById('f-attachmentname').value=e.attachmentName||'';
+  const aw=document.getElementById('f-attachment-wrap');
+  const al=document.getElementById('f-attachment-label');
+  if(e.attachmentId){aw.style.display='flex'; al.textContent=e.attachmentName||'Facture jointe';}
+  else aw.style.display='none';
+  document.getElementById('f-lot').value=e.lot;
+  document.getElementById('f-type').value=e.type;
+  document.getElementById('f-supplier').value=e.supplier||'';
+  document.getElementById('f-status').value=e.status;
+  document.getElementById('f-description').value=e.description;
+  document.getElementById('f-contract').value=e.contractAmount??'';
+  document.getElementById('f-paid').value=e.paidAmount??0;
+  document.getElementById('f-currency').value=e.currency;
+  document.getElementById('f-date').value=e.date||'';
+  document.getElementById('f-customrate').value=e.customRate??'';
+  document.getElementById('f-usdeq').value=e.usdEquivalent??'';
+  document.getElementById('f-notes').value=e.notes||'';
+  document.getElementById('modalTitle').textContent='Modifier la dépense';
+  toggleRateFields();
+  document.getElementById('expenseModal').classList.add('open');
+}
+function saveExpense(ev){
+  ev.preventDefault();
+  const id=document.getElementById('f-id').value||('e'+Date.now());
+  const contractRaw=document.getElementById('f-contract').value;
+  const obj={
+    id,
+    lot:document.getElementById('f-lot').value,
+    type:document.getElementById('f-type').value,
+    supplier:document.getElementById('f-supplier').value.trim(),
+    status:document.getElementById('f-status').value,
+    description:document.getElementById('f-description').value.trim(),
+    contractAmount:contractRaw===''?null:Number(contractRaw),
+    paidAmount:Number(document.getElementById('f-paid').value||0),
+    currency:document.getElementById('f-currency').value,
+    date:document.getElementById('f-date').value,
+    customRate:document.getElementById('f-customrate').value===''?null:Number(document.getElementById('f-customrate').value),
+    usdEquivalent:document.getElementById('f-usdeq').value===''?null:Number(document.getElementById('f-usdeq').value),
+    notes:document.getElementById('f-notes').value.trim(),
+    attachmentId:document.getElementById('f-attachmentid').value||null,
+    attachmentName:document.getElementById('f-attachmentname').value||null
+  };
+  const idx=state.expenses.findIndex(x=>x.id===id);
+  if(idx>=0) state.expenses[idx]={...state.expenses[idx],...obj}; else state.expenses.push(obj);
+  persist();closeExpenseModal();renderCurrent();
+}
+function deleteExpense(id){
+  const e=state.expenses.find(x=>x.id===id);if(!e)return;
+  if(confirm(`Supprimer « ${e.description} » ?`)){
+    state.expenses=state.expenses.filter(x=>x.id!==id);persist();renderCurrent();
+  }
+}
+function exportJSON(){
+  downloadBlob(JSON.stringify(state,null,2),'suivi-maison-backup.json','application/json');
+}
+function exportCSV(){
+  const head=['Lot','Categorie','Fournisseur','Description','Statut','Devise','Total devis','Paye','Equivalent TND','Reste','Date','Notes'];
+  const rows=state.expenses.map(e=>[
+    e.lot,e.type,e.supplier,e.description,e.status,e.currency,e.contractAmount??'',e.paidAmount,
+    paidTnd(e)??'',remainingNative(e)??'',e.date||'',e.notes||''
+  ]);
+  const csv=[head,...rows].map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');
+  downloadBlob('\ufeff'+csv,'suivi-maison-depenses.csv','text/csv;charset=utf-8');
+}
+function downloadBlob(text,name,type){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function importJSON(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const obj=JSON.parse(r.result);
+      if(!obj.expenses||!obj.settings)throw new Error();
+      state=obj;persist();renderCurrent();alert('Sauvegarde importée.');
+    }catch(e){alert('Fichier de sauvegarde invalide.')}
+  };r.readAsText(file);
+}
+function resetData(){
+  if(confirm('Réinitialiser toutes les données et revenir aux dépenses de départ ?')){
+    state=clone(INITIAL_STATE);persist();renderCurrent();
+  }
+}
+function esc(s){
+  return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+function slug(s){return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').toLowerCase()}
+function jsq(s){return String(s).replaceAll("\\","\\\\").replaceAll("'","\\'")}
+populateLotSelect();
+renderDashboard();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
