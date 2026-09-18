@@ -1,4 +1,4 @@
-const CACHE='maison-cost-ios-v4-backup-v2';
+const CACHE='maison-cost-ios-v4-history';
 const ASSETS=['./','./index.html','./manifest.json','./icon.svg','./apple-touch-icon.png','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)))});
 self.addEventListener('activate',e=>e.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()])));

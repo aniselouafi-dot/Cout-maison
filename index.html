@@ -49,6 +49,23 @@ main{max-width:1250px;margin:0 auto;padding:18px 18px 95px}
 .metric .value{font-size:24px;font-weight:800;letter-spacing:-.5px}
 .metric .sub{font-size:11px;color:var(--muted);margin-top:5px}
 .metric-action{font-size:11px;font-weight:800;color:var(--green);margin-top:10px}
+.dashboard-lot{cursor:pointer;transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease;user-select:none}
+.dashboard-lot:active{transform:scale(.99)}
+.dashboard-lot:hover{border-color:#c9c4b9;box-shadow:0 13px 32px rgba(28,34,31,.11)}
+.lot-action{font-size:11px;font-weight:800;color:var(--green);margin-top:10px}
+.history-list{display:grid;gap:8px}
+.history-item{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:13px;padding:11px 12px;background:white}
+.history-item.clickable{cursor:pointer}
+.history-item.clickable:active{transform:scale(.993)}
+.history-icon{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:#f3f1eb;font-size:16px}
+.history-main{min-width:0;flex:1}
+.history-head{display:flex;gap:8px;align-items:flex-start}
+.history-title{font-size:12px;font-weight:800;line-height:1.35;min-width:0;flex:1}
+.history-time{font-size:10px;color:var(--muted);white-space:nowrap}
+.history-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.history-meta span{font-size:10px;color:var(--muted);background:#f7f5f0;border-radius:999px;padding:3px 6px}
+.history-change{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.4}
+.history-empty{padding:15px;border:1px dashed var(--line);border-radius:13px;color:var(--muted);font-size:12px}
 .detail-list{display:grid;gap:9px}
 .detail-item{background:white;border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer}
 .detail-item:active{transform:scale(.992)}
@@ -349,7 +366,7 @@ if(window.pdfjsLib){
 </div>
 
 <script>
-const INITIAL_STATE = {"settings": {"usdRate": 2.9, "qarRate": null, "eurRate": null}, "lotBudgets": {}, "expenses": [{"id": "e001", "lot": "Gros œuvre / Structure", "type": "Matériel", "supplier": "SFMC", "description": "Matières premières", "currency": "TND", "contractAmount": 76000, "paidAmount": 76000, "status": "Payé", "date": "", "notes": "Total des virements à SFMC."}, {"id": "e002", "lot": "Gros œuvre / Structure", "type": "Matériel", "supplier": "Fournisseur béton", "description": "Béton prêt", "currency": "TND", "contractAmount": 53300, "paidAmount": 53300, "status": "Payé", "date": "", "notes": "Fournisseur non encore précisé."}, {"id": "e003", "lot": "Gros œuvre / Structure", "type": "Main-d’œuvre", "supplier": "Ahmed Ben Hmad", "description": "Main-d’œuvre construction", "currency": "TND", "contractAmount": 140211, "paidAmount": 140211, "status": "Payé", "date": "", "notes": "Total payé à Ahmed Ben Hmad."}, {"id": "e004", "lot": "Climatisation / Ventilation", "type": "Matériel", "supplier": "SPEED AIR", "description": "VRF + unités intérieures gainables", "currency": "TND", "contractAmount": 24388.336, "paidAmount": 24388.336, "status": "Payé", "date": "2026-02-28", "notes": "Devis DEV/0154/2026 – suite parentale, salon, séjour et cuisine."}, {"id": "e005", "lot": "Climatisation / Ventilation", "type": "Matériel", "supplier": "SPEED AIR", "description": "Diffuseurs linéaires Fantome", "currency": "TND", "contractAmount": 6597.36, "paidAmount": 6597.36, "status": "Payé", "date": "2026-03-12", "notes": "Devis DEV/0184/2026."}, {"id": "e006", "lot": "Climatisation / Ventilation", "type": "Matériel", "supplier": "AGT / Mourad Sassi", "description": "Gaines galvanisées et accessoires de distribution d’air", "currency": "TND", "contractAmount": 8545.022, "paidAmount": 8545.022, "status": "Payé", "date": "2026-04-13", "notes": "Offre 260285 – Villa WEFI."}, {"id": "e007", "lot": "Plomberie / Sanitaires", "type": "Main-d’œuvre", "supplier": "Plombier", "description": "Avance main-d’œuvre plomberie", "currency": "TND", "contractAmount": null, "paidAmount": 2000, "status": "Avance", "date": "", "notes": "Montant total du marché non encore précisé."}, {"id": "e008", "lot": "Plomberie / Sanitaires", "type": "Matériel", "supplier": "Plombier", "description": "Avance matériel plomberie", "currency": "TND", "contractAmount": null, "paidAmount": 5000, "status": "Avance", "date": "", "notes": "Montant total du matériel non encore précisé."}, {"id": "e009", "lot": "Aluminium", "type": "Mixte / à ventiler", "supplier": "Fournisseur aluminium", "description": "Menuiseries aluminium – devis général", "currency": "TND", "contractAmount": 102000, "paidAmount": 20000, "status": "Avance", "date": "", "notes": "Devis 102 000 TND. Avance 20 000 TND. À ventiler matériel / main-d’œuvre."}, {"id": "e010", "lot": "Revêtements / Finitions", "type": "Matériel", "supplier": "Arabesque", "description": "Faïence Arabesque", "currency": "TND", "contractAmount": 12580, "paidAmount": 6500, "status": "Avance", "date": "", "notes": "Solde connu : 6 080 TND."}, {"id": "e011", "lot": "Électricité", "type": "Main-d’œuvre", "supplier": "Électricien", "description": "Fourreautage – main-d’œuvre", "currency": "TND", "contractAmount": null, "paidAmount": 5000, "status": "Avance", "date": "", "notes": "Avance payée."}, {"id": "e012", "lot": "Électricité", "type": "Matériel", "supplier": "Électricien", "description": "Fourreautage – matériel", "currency": "TND", "contractAmount": null, "paidAmount": 5000, "status": "Avance", "date": "", "notes": "Avance payée."}, {"id": "e013", "lot": "Revêtements / Finitions", "type": "Matériel", "supplier": "Fournisseur dallage / marbre", "description": "Partie de dallage + poutres en marbre pour les arcs", "currency": "TND", "contractAmount": 22000, "paidAmount": 22000, "status": "Payé", "date": "", "notes": "Achat payé."}, {"id": "e014", "lot": "Menuiserie / Patrimoine", "type": "Matériel", "supplier": "Fournisseur portes", "description": "Portes intérieures", "currency": "TND", "contractAmount": 7000, "paidAmount": 7000, "status": "Payé", "date": "", "notes": "Achat payé."}, {"id": "e015", "lot": "Menuiserie / Patrimoine", "type": "Matériel", "supplier": "Fournisseur porte patio", "description": "Porte du patio", "currency": "TND", "contractAmount": 3500, "paidAmount": 3500, "status": "Payé", "date": "", "notes": "Achat payé."}, {"id": "e016", "lot": "Menuiserie / Patrimoine", "type": "Matériel", "supplier": "Fournisseur fenêtres anciennes", "description": "Anciennes fenêtres", "currency": "TND", "contractAmount": 7000, "paidAmount": 7000, "status": "Payé", "date": "", "notes": "Éléments anciens destinés à la maison."}, {"id": "e017", "lot": "Menuiserie / Patrimoine", "type": "Main-d’œuvre", "supplier": "Artisan restauration", "description": "Sablage, peinture et travaux de restauration", "currency": "TND", "contractAmount": 5000, "paidAmount": 5000, "status": "Payé", "date": "", "notes": "Restauration des éléments anciens."}, {"id": "e018", "lot": "Menuiserie / Patrimoine", "type": "Main-d’œuvre", "supplier": "Artisans menuisiers", "description": "Menuiserie artisanale", "currency": "TND", "contractAmount": 2500, "paidAmount": 2500, "status": "Payé", "date": "", "notes": "Montant approximatif communiqué : presque 2 500 TND.", "approximate": true}, {"id": "e019", "lot": "Plomberie / Sanitaires", "type": "Matériel", "supplier": "Foshan EMPOLO", "description": "Sanitaires / robinetterie – commande EMPOLO", "currency": "USD", "contractAmount": 1843.96, "paidAmount": 1843.96, "status": "Payé", "date": "", "notes": "Commande EM-250331 entièrement payée."}, {"id": "e020", "lot": "Cuisine / Équipements", "type": "Matériel", "supplier": "Dongguan Blue Shark Technology", "description": "2 prises escamotables motorisées IP65 pour plan de travail", "currency": "USD", "contractAmount": 198.26, "paidAmount": 198.26, "status": "Payé", "date": "2024-12-02", "notes": "Montant réellement payé, frais inclus."}, {"id": "e021", "lot": "Réseau informatique", "type": "Matériel", "supplier": "Shenzhen Huaxufeng / KuWFi", "description": "AP extérieurs + AP plafond + contrôleur CAPWAP + switch PoE", "currency": "USD", "contractAmount": 377.09, "paidAmount": 377.09, "status": "Payé", "date": "2024-10-23", "notes": "Coût net après remboursement de 108 USD."}, {"id": "e022", "lot": "Domotique / Smart Home", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Smart Home / interphone – achats confirmés du ZIP", "currency": "USD", "contractAmount": 487.15, "paidAmount": 487.15, "status": "Payé", "date": "", "notes": "Achats payés, regroupés par catégorie."}, {"id": "e023", "lot": "Réseau informatique", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Réseau supplémentaire : routeur, RJ45, CAT6A, AP/switch PoE", "currency": "USD", "contractAmount": 423.62, "paidAmount": 423.62, "status": "Payé", "date": "", "notes": "Inclut notamment 610 m CAT6A et 150 connecteurs RJ45."}, {"id": "e024", "lot": "Plomberie / Sanitaires", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Plomberie / sanitaires importés", "currency": "USD", "contractAmount": 668.31, "paidAmount": 668.31, "status": "Payé", "date": "", "notes": "Coût net des achats confirmés."}, {"id": "e025", "lot": "Électricité", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Matériel électrique importé", "currency": "USD", "contractAmount": 868.41, "paidAmount": 868.41, "status": "Payé", "date": "", "notes": "Disjoncteurs, interrupteurs, prises et accessoires."}, {"id": "e026", "lot": "Piscine / Extérieur", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Éclairage piscine et projecteurs extérieurs", "currency": "USD", "contractAmount": 1857.74, "paidAmount": 1857.74, "status": "Payé", "date": "", "notes": "Achats confirmés : luminaires piscine et éclairage extérieur."}, {"id": "e027", "lot": "Climatisation / Ventilation", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Ventilation / extracteurs", "currency": "USD", "contractAmount": 270.16, "paidAmount": 270.16, "status": "Payé", "date": "", "notes": "6 extracteurs 150 mm + ventilateur plafond, selon récapitulatif."}, {"id": "e028", "lot": "Menuiserie / Patrimoine", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Poignées / décoration menuiserie", "currency": "USD", "contractAmount": 392.22, "paidAmount": 392.22, "status": "Payé", "date": "", "notes": "Poignées acrylique dorées et éléments associés."}, {"id": "e029", "lot": "Sauna / Hammam", "type": "Matériel", "supplier": "Foshan Stepon Technology", "description": "Générateur de vapeur Wi‑Fi sauna / hammam", "currency": "QAR", "contractAmount": 1158.24, "paidAmount": 1158.24, "status": "Payé", "date": "2025-12-28", "usdEquivalent": 308.98, "notes": "Reçu : 1 158,24 QAR payés, équivalent 308,98 USD. L'équivalent TND suit le taux USD/TND global."}, {"id": "e030", "lot": "Domotique / Smart Home", "type": "Matériel", "supplier": "Shenzhen Golden Security Technology", "description": "Panneaux Tuya/Zigbee, interrupteurs, rideaux et accessoires", "currency": "USD", "contractAmount": 2716.67, "paidAmount": 0, "status": "Devis / non confirmé", "date": "2024-10-17", "notes": "Proforma GS20241017. Paiement non confirmé : ne compte pas dans les dépenses payées."}, {"id": "e031", "lot": "Sécurité / Alarme / Interphone", "type": "Matériel", "supplier": "Hangzhou Roombanker / Dusun", "description": "Centrales 4G, PIR, contacts portes, fumée et sirènes", "currency": "USD", "contractAmount": 397.0, "paidAmount": 0, "status": "Devis / non confirmé", "date": "2024-10-22", "notes": "Proforma 2410346917. Paiement non confirmé."}]};
+const INITIAL_STATE = {"settings": {"usdRate": 2.9, "qarRate": null, "eurRate": null}, "lotBudgets": {}, "activityLog": [], "expenses": [{"id": "e001", "lot": "Gros œuvre / Structure", "type": "Matériel", "supplier": "SFMC", "description": "Matières premières", "currency": "TND", "contractAmount": 76000, "paidAmount": 76000, "status": "Payé", "date": "", "notes": "Total des virements à SFMC."}, {"id": "e002", "lot": "Gros œuvre / Structure", "type": "Matériel", "supplier": "Fournisseur béton", "description": "Béton prêt", "currency": "TND", "contractAmount": 53300, "paidAmount": 53300, "status": "Payé", "date": "", "notes": "Fournisseur non encore précisé."}, {"id": "e003", "lot": "Gros œuvre / Structure", "type": "Main-d’œuvre", "supplier": "Ahmed Ben Hmad", "description": "Main-d’œuvre construction", "currency": "TND", "contractAmount": 140211, "paidAmount": 140211, "status": "Payé", "date": "", "notes": "Total payé à Ahmed Ben Hmad."}, {"id": "e004", "lot": "Climatisation / Ventilation", "type": "Matériel", "supplier": "SPEED AIR", "description": "VRF + unités intérieures gainables", "currency": "TND", "contractAmount": 24388.336, "paidAmount": 24388.336, "status": "Payé", "date": "2026-02-28", "notes": "Devis DEV/0154/2026 – suite parentale, salon, séjour et cuisine."}, {"id": "e005", "lot": "Climatisation / Ventilation", "type": "Matériel", "supplier": "SPEED AIR", "description": "Diffuseurs linéaires Fantome", "currency": "TND", "contractAmount": 6597.36, "paidAmount": 6597.36, "status": "Payé", "date": "2026-03-12", "notes": "Devis DEV/0184/2026."}, {"id": "e006", "lot": "Climatisation / Ventilation", "type": "Matériel", "supplier": "AGT / Mourad Sassi", "description": "Gaines galvanisées et accessoires de distribution d’air", "currency": "TND", "contractAmount": 8545.022, "paidAmount": 8545.022, "status": "Payé", "date": "2026-04-13", "notes": "Offre 260285 – Villa WEFI."}, {"id": "e007", "lot": "Plomberie / Sanitaires", "type": "Main-d’œuvre", "supplier": "Plombier", "description": "Avance main-d’œuvre plomberie", "currency": "TND", "contractAmount": null, "paidAmount": 2000, "status": "Avance", "date": "", "notes": "Montant total du marché non encore précisé."}, {"id": "e008", "lot": "Plomberie / Sanitaires", "type": "Matériel", "supplier": "Plombier", "description": "Avance matériel plomberie", "currency": "TND", "contractAmount": null, "paidAmount": 5000, "status": "Avance", "date": "", "notes": "Montant total du matériel non encore précisé."}, {"id": "e009", "lot": "Aluminium", "type": "Mixte / à ventiler", "supplier": "Fournisseur aluminium", "description": "Menuiseries aluminium – devis général", "currency": "TND", "contractAmount": 102000, "paidAmount": 20000, "status": "Avance", "date": "", "notes": "Devis 102 000 TND. Avance 20 000 TND. À ventiler matériel / main-d’œuvre."}, {"id": "e010", "lot": "Revêtements / Finitions", "type": "Matériel", "supplier": "Arabesque", "description": "Faïence Arabesque", "currency": "TND", "contractAmount": 12580, "paidAmount": 6500, "status": "Avance", "date": "", "notes": "Solde connu : 6 080 TND."}, {"id": "e011", "lot": "Électricité", "type": "Main-d’œuvre", "supplier": "Électricien", "description": "Fourreautage – main-d’œuvre", "currency": "TND", "contractAmount": null, "paidAmount": 5000, "status": "Avance", "date": "", "notes": "Avance payée."}, {"id": "e012", "lot": "Électricité", "type": "Matériel", "supplier": "Électricien", "description": "Fourreautage – matériel", "currency": "TND", "contractAmount": null, "paidAmount": 5000, "status": "Avance", "date": "", "notes": "Avance payée."}, {"id": "e013", "lot": "Revêtements / Finitions", "type": "Matériel", "supplier": "Fournisseur dallage / marbre", "description": "Partie de dallage + poutres en marbre pour les arcs", "currency": "TND", "contractAmount": 22000, "paidAmount": 22000, "status": "Payé", "date": "", "notes": "Achat payé."}, {"id": "e014", "lot": "Menuiserie / Patrimoine", "type": "Matériel", "supplier": "Fournisseur portes", "description": "Portes intérieures", "currency": "TND", "contractAmount": 7000, "paidAmount": 7000, "status": "Payé", "date": "", "notes": "Achat payé."}, {"id": "e015", "lot": "Menuiserie / Patrimoine", "type": "Matériel", "supplier": "Fournisseur porte patio", "description": "Porte du patio", "currency": "TND", "contractAmount": 3500, "paidAmount": 3500, "status": "Payé", "date": "", "notes": "Achat payé."}, {"id": "e016", "lot": "Menuiserie / Patrimoine", "type": "Matériel", "supplier": "Fournisseur fenêtres anciennes", "description": "Anciennes fenêtres", "currency": "TND", "contractAmount": 7000, "paidAmount": 7000, "status": "Payé", "date": "", "notes": "Éléments anciens destinés à la maison."}, {"id": "e017", "lot": "Menuiserie / Patrimoine", "type": "Main-d’œuvre", "supplier": "Artisan restauration", "description": "Sablage, peinture et travaux de restauration", "currency": "TND", "contractAmount": 5000, "paidAmount": 5000, "status": "Payé", "date": "", "notes": "Restauration des éléments anciens."}, {"id": "e018", "lot": "Menuiserie / Patrimoine", "type": "Main-d’œuvre", "supplier": "Artisans menuisiers", "description": "Menuiserie artisanale", "currency": "TND", "contractAmount": 2500, "paidAmount": 2500, "status": "Payé", "date": "", "notes": "Montant approximatif communiqué : presque 2 500 TND.", "approximate": true}, {"id": "e019", "lot": "Plomberie / Sanitaires", "type": "Matériel", "supplier": "Foshan EMPOLO", "description": "Sanitaires / robinetterie – commande EMPOLO", "currency": "USD", "contractAmount": 1843.96, "paidAmount": 1843.96, "status": "Payé", "date": "", "notes": "Commande EM-250331 entièrement payée."}, {"id": "e020", "lot": "Cuisine / Équipements", "type": "Matériel", "supplier": "Dongguan Blue Shark Technology", "description": "2 prises escamotables motorisées IP65 pour plan de travail", "currency": "USD", "contractAmount": 198.26, "paidAmount": 198.26, "status": "Payé", "date": "2024-12-02", "notes": "Montant réellement payé, frais inclus."}, {"id": "e021", "lot": "Réseau informatique", "type": "Matériel", "supplier": "Shenzhen Huaxufeng / KuWFi", "description": "AP extérieurs + AP plafond + contrôleur CAPWAP + switch PoE", "currency": "USD", "contractAmount": 377.09, "paidAmount": 377.09, "status": "Payé", "date": "2024-10-23", "notes": "Coût net après remboursement de 108 USD."}, {"id": "e022", "lot": "Domotique / Smart Home", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Smart Home / interphone – achats confirmés du ZIP", "currency": "USD", "contractAmount": 487.15, "paidAmount": 487.15, "status": "Payé", "date": "", "notes": "Achats payés, regroupés par catégorie."}, {"id": "e023", "lot": "Réseau informatique", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Réseau supplémentaire : routeur, RJ45, CAT6A, AP/switch PoE", "currency": "USD", "contractAmount": 423.62, "paidAmount": 423.62, "status": "Payé", "date": "", "notes": "Inclut notamment 610 m CAT6A et 150 connecteurs RJ45."}, {"id": "e024", "lot": "Plomberie / Sanitaires", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Plomberie / sanitaires importés", "currency": "USD", "contractAmount": 668.31, "paidAmount": 668.31, "status": "Payé", "date": "", "notes": "Coût net des achats confirmés."}, {"id": "e025", "lot": "Électricité", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Matériel électrique importé", "currency": "USD", "contractAmount": 868.41, "paidAmount": 868.41, "status": "Payé", "date": "", "notes": "Disjoncteurs, interrupteurs, prises et accessoires."}, {"id": "e026", "lot": "Piscine / Extérieur", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Éclairage piscine et projecteurs extérieurs", "currency": "USD", "contractAmount": 1857.74, "paidAmount": 1857.74, "status": "Payé", "date": "", "notes": "Achats confirmés : luminaires piscine et éclairage extérieur."}, {"id": "e027", "lot": "Climatisation / Ventilation", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Ventilation / extracteurs", "currency": "USD", "contractAmount": 270.16, "paidAmount": 270.16, "status": "Payé", "date": "", "notes": "6 extracteurs 150 mm + ventilateur plafond, selon récapitulatif."}, {"id": "e028", "lot": "Menuiserie / Patrimoine", "type": "Matériel", "supplier": "Alibaba – achats agrégés", "description": "Poignées / décoration menuiserie", "currency": "USD", "contractAmount": 392.22, "paidAmount": 392.22, "status": "Payé", "date": "", "notes": "Poignées acrylique dorées et éléments associés."}, {"id": "e029", "lot": "Sauna / Hammam", "type": "Matériel", "supplier": "Foshan Stepon Technology", "description": "Générateur de vapeur Wi‑Fi sauna / hammam", "currency": "QAR", "contractAmount": 1158.24, "paidAmount": 1158.24, "status": "Payé", "date": "2025-12-28", "usdEquivalent": 308.98, "notes": "Reçu : 1 158,24 QAR payés, équivalent 308,98 USD. L'équivalent TND suit le taux USD/TND global."}, {"id": "e030", "lot": "Domotique / Smart Home", "type": "Matériel", "supplier": "Shenzhen Golden Security Technology", "description": "Panneaux Tuya/Zigbee, interrupteurs, rideaux et accessoires", "currency": "USD", "contractAmount": 2716.67, "paidAmount": 0, "status": "Devis / non confirmé", "date": "2024-10-17", "notes": "Proforma GS20241017. Paiement non confirmé : ne compte pas dans les dépenses payées."}, {"id": "e031", "lot": "Sécurité / Alarme / Interphone", "type": "Matériel", "supplier": "Hangzhou Roombanker / Dusun", "description": "Centrales 4G, PIR, contacts portes, fumée et sirènes", "currency": "USD", "contractAmount": 397.0, "paidAmount": 0, "status": "Devis / non confirmé", "date": "2024-10-22", "notes": "Proforma 2410346917. Paiement non confirmé."}]};
 const LOTS = [
 "Études / Architecte / Ingénierie",
 "Terrassement / Fondations",
@@ -404,9 +421,19 @@ function migrateLotNames(){
       changed=true;
     }
   });
-  if(changed) persist();
+  if(changed) localStorage.setItem('maisonCostStateV3',JSON.stringify(state));
 }
 migrateLotNames();
+
+function ensureStateShape(){
+  let changed=false;
+  if(!state.settings||typeof state.settings!=='object'){state.settings={usdRate:2.9,qarRate:null,eurRate:null};changed=true;}
+  if(!state.lotBudgets||typeof state.lotBudgets!=='object'){state.lotBudgets={};changed=true;}
+  if(!Array.isArray(state.expenses)){state.expenses=[];changed=true;}
+  if(!Array.isArray(state.activityLog)){state.activityLog=[];changed=true;}
+  if(changed) localStorage.setItem('maisonCostStateV3',JSON.stringify(state));
+}
+ensureStateShape();
 
 let currentTab = 'dashboard';
 let robotRecognition = null;
@@ -428,6 +455,92 @@ function loadState(){
 function persist(){
   localStorage.setItem('maisonCostStateV3', JSON.stringify(state));
   scheduleDriveAutoBackup();
+}
+function activitySnapshot(e){
+  if(!e)return null;
+  return {
+    id:e.id||'',lot:e.lot||'',type:e.type||'',supplier:e.supplier||'',description:e.description||'',
+    currency:e.currency||'TND',contractAmount:e.contractAmount??null,paidAmount:Number(e.paidAmount||0),
+    status:e.status||'',date:e.date||'',notes:e.notes||''
+  };
+}
+function activityChanges(before,after){
+  if(!before||!after)return [];
+  const labels={lot:'Lot',type:'Catégorie',supplier:'Fournisseur',description:'Description',currency:'Devise',contractAmount:'Marché',paidAmount:'Payé',status:'Statut',date:'Date'};
+  const keys=Object.keys(labels);
+  const out=[];
+  for(const k of keys){
+    const a=before[k]??''; const b=after[k]??'';
+    if(String(a)!==String(b)){
+      const val=v=>{
+        if(k==='contractAmount'||k==='paidAmount') return v===''||v===null?'—':`${fmt(Number(v),3)} ${after.currency||before.currency||'TND'}`;
+        return String(v||'—');
+      };
+      out.push(`${labels[k]} : ${val(a)} → ${val(b)}`);
+    }
+  }
+  return out.slice(0,6);
+}
+function recordActivity(action,expense,before=null){
+  if(!Array.isArray(state.activityLog))state.activityLog=[];
+  const snap=activitySnapshot(expense);
+  const entry={
+    id:'h'+Date.now()+Math.random().toString(36).slice(2,7),
+    timestamp:new Date().toISOString(),
+    action,
+    expenseId:snap?.id||before?.id||'',
+    description:snap?.description||before?.description||'',
+    lot:snap?.lot||before?.lot||'',
+    supplier:snap?.supplier||before?.supplier||'',
+    currency:snap?.currency||before?.currency||'TND',
+    paidAmount:snap?.paidAmount??before?.paidAmount??0,
+    contractAmount:snap?.contractAmount??before?.contractAmount??null,
+    status:snap?.status||before?.status||'',
+    changes:action==='update'?activityChanges(before,snap):[],
+    snapshot:snap||before||null
+  };
+  state.activityLog.unshift(entry);
+  if(state.activityLog.length>500) state.activityLog=state.activityLog.slice(0,500);
+}
+function activityLabel(action){return action==='add'?'Ajout':action==='update'?'Modification':action==='delete'?'Suppression':action}
+function activityIcon(action){return action==='add'?'＋':action==='update'?'✎':action==='delete'?'🗑️':'•'}
+function activityDate(iso){
+  if(!iso)return '';
+  const d=new Date(iso);
+  if(Number.isNaN(d.getTime()))return '';
+  return d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function activityAmount(entry){
+  const snap=entry.snapshot||entry;
+  const amount=Number(snap.paidAmount||entry.paidAmount||0);
+  const cur=snap.currency||entry.currency||'TND';
+  return amount>0?money(amount,cur):'';
+}
+function historyItemHTML(entry,compact=false){
+  const exists=entry.expenseId&&state.expenses.some(e=>e.id===entry.expenseId);
+  const changes=Array.isArray(entry.changes)?entry.changes:[];
+  const changeText=changes.length?esc(changes.join(' • ')):'';
+  const amount=activityAmount(entry);
+  return `<div class="history-item ${exists?'clickable':''}" ${exists?`onclick="openActivityExpense('${jsq(entry.expenseId)}')"`:''}>
+    <div class="history-icon">${activityIcon(entry.action)}</div>
+    <div class="history-main">
+      <div class="history-head"><div class="history-title">${esc(activityLabel(entry.action))} — ${esc(entry.description||'Dépense')}</div><div class="history-time">${esc(activityDate(entry.timestamp))}</div></div>
+      <div class="history-meta">${entry.lot?`<span>${esc(entry.lot)}</span>`:''}${entry.supplier?`<span>${esc(entry.supplier)}</span>`:''}${amount?`<span>${esc(amount)}</span>`:''}${entry.action==='delete'?'<span>Supprimée</span>':''}</div>
+      ${!compact&&changeText?`<div class="history-change">${changeText}</div>`:''}
+    </div>
+  </div>`;
+}
+function openActivityExpense(id){
+  const e=state.expenses.find(x=>x.id===id);
+  if(!e)return;
+  closeMetricDetails();
+  editExpense(id);
+}
+function openHistoryDetails(){
+  const arr=(state.activityLog||[]).slice().sort((a,b)=>String(b.timestamp||'').localeCompare(String(a.timestamp||'')));
+  document.getElementById('metricDetailTitle').textContent='Historique des saisies';
+  document.getElementById('metricDetailBody').innerHTML=arr.length?`<div class="history-list">${arr.map(e=>historyItemHTML(e,false)).join('')}</div>`:'<div class="empty">Aucun historique pour le moment. Les prochains ajouts, modifications et suppressions seront enregistrés ici.</div>';
+  document.getElementById('metricDetailModal').classList.add('open');
 }
 function fmt(n, digits=2){
   if(n===null || n===undefined || Number.isNaN(Number(n))) return '—';
@@ -532,7 +645,7 @@ function renderDashboard(){
       <div class="lot-grid">
         ${lots.map(([lot,s])=>{
           const pct=s.budget>0?Math.min(100,(s.paid/s.budget)*100):null;
-          return `<div class="card lot-card">
+          return `<div class="card lot-card dashboard-lot" role="button" tabindex="0" onclick="openLotDetails('${jsq(lot)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLotDetails('${jsq(lot)}')}">
             <div class="lot-name">${esc(lot)}</div>
             <div class="lot-row"><span>Payé</span><strong>${fmt(s.paid,2)} TND</strong></div>
             <div class="lot-row"><span>Matériel</span><strong>${fmt(s.material,2)}</strong></div>
@@ -540,9 +653,14 @@ function renderDashboard(){
             ${s.mixed?`<div class="lot-row"><span>À ventiler</span><strong>${fmt(s.mixed,2)}</strong></div>`:''}
             ${s.remaining?`<div class="lot-row"><span>Reste connu</span><strong>${fmt(s.remaining,2)}</strong></div>`:''}
             ${pct!==null?`<div class="progress"><div style="width:${pct}%"></div></div><div class="small-note">${fmt(pct,1)} % du budget de lot</div>`:''}
+            <div class="lot-action">Voir le détail du lot ›</div>
           </div>`;
         }).join('')}
       </div>
+    </div>
+    <div class="card section">
+      <div class="section-title"><h2>Historique des saisies</h2><button class="btn small" onclick="openHistoryDetails()">Voir tout</button></div>
+      ${(state.activityLog||[]).length?`<div class="history-list">${(state.activityLog||[]).slice(0,5).map(e=>historyItemHTML(e,true)).join('')}</div>`:'<div class="history-empty">L’historique commence avec cette version. Les prochains ajouts, modifications et suppressions apparaîtront ici.</div>'}
     </div>
     <div class="card section">
       <div class="section-title"><h2>Accès rapide</h2></div>
@@ -626,6 +744,33 @@ function closeMetricDetails(){
 function openExpenseFromMetric(id){
   closeMetricDetails();
   editExpense(id);
+}
+
+function openLotDetails(lot){
+  const stats=lotStats(lot);
+  const arr=stats.ex.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  document.getElementById('metricDetailTitle').textContent=`${lot} — détail`;
+  const summary=`<div class="detail-finance" style="margin-bottom:12px">
+    <div><small>Total payé</small><strong>${money(stats.paid,'TND',2)}</strong></div>
+    <div><small>Matériel</small><strong>${money(stats.material,'TND',2)}</strong></div>
+    <div><small>Main-d’œuvre</small><strong>${money(stats.labor,'TND',2)}</strong></div>
+    ${stats.remaining?`<div><small>Reste connu</small><strong>${money(stats.remaining,'TND',2)}</strong></div>`:''}
+  </div>`;
+  const rows=arr.map(e=>{
+    const eq=paidTnd(e); const rem=remainingNative(e);
+    return `<div class="detail-item" onclick="openExpenseFromMetric('${jsq(e.id)}')">
+      <div class="detail-head"><div class="detail-title">${esc(e.description)}</div><div class="detail-amount">${eq===null?'Taux manquant':money(eq,'TND',2)}</div></div>
+      <div class="detail-meta"><span>${esc(e.type)}</span><span>${esc(e.supplier||'Fournisseur non précisé')}</span><span>${esc(e.status)}</span>${e.date?`<span>${esc(e.date)}</span>`:''}</div>
+      <div class="detail-finance">
+        <div><small>Payé</small><strong>${money(e.paidAmount,e.currency)}</strong></div>
+        <div><small>Total marché</small><strong>${e.contractAmount===null||e.contractAmount===''?'—':money(e.contractAmount,e.currency)}</strong></div>
+        <div><small>Reste</small><strong>${rem===null?'—':money(rem,e.currency)}</strong></div>
+      </div>
+      <div class="small-note" style="margin-top:7px">Touchez pour ouvrir / modifier cette dépense</div>
+    </div>`;
+  }).join('');
+  document.getElementById('metricDetailBody').innerHTML=summary+(rows?`<div class="detail-list">${rows}</div>`:'<div class="empty">Aucune dépense dans ce lot.</div>');
+  document.getElementById('metricDetailModal').classList.add('open');
 }
 
 function renderExpenses(){
@@ -1629,6 +1774,17 @@ function buildBackupV2(attachments=[]){
       eurVersTND:state.settings?.eurRate??null
     },
     lots:buildReadableLots(),
+    historique:(state.activityLog||[]).map(h=>({
+      dateHeure:h.timestamp||'',
+      action:activityLabel(h.action),
+      depenseId:h.expenseId||'',
+      description:h.description||'',
+      lot:h.lot||'',
+      fournisseur:h.supplier||'',
+      montantPaye:h.paidAmount??0,
+      devise:h.currency||'TND',
+      modifications:Array.isArray(h.changes)?h.changes:[]
+    })),
     piecesJointes:attachments.map(a=>({
       id:a.id,
       nom:a.name||'',
@@ -1718,6 +1874,7 @@ async function restoreFromGoogleDrive(){
       }
     }
     state=restoredState;
+    ensureStateShape();
     localStorage.setItem('maisonCostStateV3',JSON.stringify(state));
     localStorage.setItem('maisonDriveLastBackup',f.modifiedTime||new Date().toISOString());
     renderCurrent();
@@ -1893,12 +2050,20 @@ function saveExpense(ev){
     attachmentName:document.getElementById('f-attachmentname').value||null
   };
   const idx=state.expenses.findIndex(x=>x.id===id);
-  if(idx>=0) state.expenses[idx]={...state.expenses[idx],...obj}; else state.expenses.push(obj);
+  const before=idx>=0?activitySnapshot(state.expenses[idx]):null;
+  if(idx>=0){
+    state.expenses[idx]={...state.expenses[idx],...obj};
+    recordActivity('update',state.expenses[idx],before);
+  }else{
+    state.expenses.push(obj);
+    recordActivity('add',obj,null);
+  }
   persist();closeExpenseModal();renderCurrent();
 }
 function deleteExpense(id){
   const e=state.expenses.find(x=>x.id===id);if(!e)return;
   if(confirm(`Supprimer « ${e.description} » ?`)){
+    recordActivity('delete',null,activitySnapshot(e));
     state.expenses=state.expenses.filter(x=>x.id!==id);persist();renderCurrent();
   }
 }
@@ -1922,7 +2087,7 @@ function importJSON(file){
       const obj=JSON.parse(r.result);
       const restored=obj?.restauration?.state||obj?.state||obj;
       if(!restored?.expenses||!restored?.settings)throw new Error();
-      state=restored;persist();renderCurrent();alert('Sauvegarde importée.');
+      state=restored;ensureStateShape();persist();renderCurrent();alert('Sauvegarde importée.');
     }catch(e){alert('Fichier de sauvegarde invalide.')}
   };r.readAsText(file);
 }
