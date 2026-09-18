@@ -209,6 +209,7 @@ if(window.pdfjsLib){
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 </head>
 <body>
@@ -426,6 +427,7 @@ function loadState(){
 }
 function persist(){
   localStorage.setItem('maisonCostStateV3', JSON.stringify(state));
+  scheduleDriveAutoBackup();
 }
 function fmt(n, digits=2){
   if(n===null || n===undefined || Number.isNaN(Number(n))) return '—';
@@ -1378,6 +1380,375 @@ async function invoiceToExpenseForm(){
   toggleRateFields();
 }
 
+
+// ---------- Sauvegarde Google Drive ----------
+const GOOGLE_DRIVE_CLIENT_ID='550238350233-6ie3gsh8g28uk8rjr675ogs6q56chf14.apps.googleusercontent.com';
+const GOOGLE_DRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
+const DRIVE_BACKUP_FOLDER='Cout Maison - Sauvegardes';
+const DRIVE_ATTACHMENTS_FOLDER='Pieces jointes';
+const DRIVE_CURRENT_BACKUP='Cout_Maison_BACKUP.json';
+const DRIVE_LEGACY_BACKUP='suivi-maison-backup-current.json';
+const DRIVE_REPORT_FILE='Cout_Maison_RAPPORT.csv';
+let driveTokenClient=null;
+let driveAccessToken=null;
+let driveAutoTimer=null;
+let driveBusy=false;
+
+function driveAutoEnabled(){return localStorage.getItem('maisonDriveAuto')!=='0'}
+function setDriveAuto(v){
+  localStorage.setItem('maisonDriveAuto',v?'1':'0');
+  updateDriveStatus();
+  if(v && driveAccessToken) scheduleDriveAutoBackup();
+}
+function driveLastBackup(){return localStorage.getItem('maisonDriveLastBackup')||''}
+function driveStatusText(){
+  if(driveBusy) return 'Synchronisation en cours…';
+  if(driveAccessToken) return 'Google Drive connecté pour cette session';
+  return 'Non connecté';
+}
+function updateDriveStatus(extra=''){
+  const st=document.getElementById('driveStatus');
+  const last=document.getElementById('driveLastBackup');
+  const toggle=document.getElementById('driveAutoToggle');
+  if(st) st.textContent=extra||driveStatusText();
+  if(last){
+    const x=driveLastBackup();
+    last.textContent=x?new Date(x).toLocaleString('fr-FR'):'Aucune sauvegarde Drive';
+  }
+  if(toggle) toggle.checked=driveAutoEnabled();
+}
+function waitForGoogleIdentity(timeout=10000){
+  return new Promise((resolve,reject)=>{
+    const started=Date.now();
+    const check=()=>{
+      if(window.google?.accounts?.oauth2) return resolve();
+      if(Date.now()-started>timeout) return reject(new Error('Google Identity Services indisponible. Vérifie la connexion Internet.'));
+      setTimeout(check,150);
+    };
+    check();
+  });
+}
+async function initDriveTokenClient(){
+  if(driveTokenClient) return driveTokenClient;
+  await waitForGoogleIdentity();
+  driveTokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:GOOGLE_DRIVE_CLIENT_ID,
+    scope:GOOGLE_DRIVE_SCOPE,
+    callback:()=>{}
+  });
+  return driveTokenClient;
+}
+function requestDriveToken(prompt=''){
+  return new Promise(async(resolve,reject)=>{
+    try{
+      const tc=await initDriveTokenClient();
+      tc.callback=(resp)=>{
+        if(resp?.error) return reject(new Error(resp.error_description||resp.error));
+        driveAccessToken=resp.access_token;
+        updateDriveStatus();
+        resolve(driveAccessToken);
+      };
+      tc.requestAccessToken({prompt});
+    }catch(e){reject(e)}
+  });
+}
+async function ensureDriveToken(interactive=true){
+  if(driveAccessToken) return driveAccessToken;
+  return requestDriveToken(interactive?'consent':'');
+}
+async function driveRequest(url,opts={}){
+  await ensureDriveToken(true);
+  const headers=new Headers(opts.headers||{});
+  headers.set('Authorization','Bearer '+driveAccessToken);
+  const res=await fetch(url,{...opts,headers});
+  if(res.status===401){
+    driveAccessToken=null;
+    await ensureDriveToken(true);
+    headers.set('Authorization','Bearer '+driveAccessToken);
+    const retry=await fetch(url,{...opts,headers});
+    if(!retry.ok) throw new Error(await retry.text()||('Erreur Drive '+retry.status));
+    return retry;
+  }
+  if(!res.ok) throw new Error(await res.text()||('Erreur Drive '+res.status));
+  return res;
+}
+function qDrive(s){return encodeURIComponent(s)}
+async function driveFindFiles(q,pageSize=100){
+  const url=`https://www.googleapis.com/drive/v3/files?q=${qDrive(q)}&spaces=drive&pageSize=${pageSize}&orderBy=modifiedTime%20desc&fields=files(id,name,mimeType,modifiedTime,parents,size)`;
+  const r=await driveRequest(url);
+  return (await r.json()).files||[];
+}
+async function driveCreateFolder(name,parentId=null){
+  const meta={name,mimeType:'application/vnd.google-apps.folder'};
+  if(parentId) meta.parents=[parentId];
+  const r=await driveRequest('https://www.googleapis.com/drive/v3/files?fields=id,name,modifiedTime',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(meta)});
+  return r.json();
+}
+async function driveEnsureFolder(name,parentId=null){
+  let q=`name='${name.replaceAll("'","\\'")}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  if(parentId) q+=` and '${parentId}' in parents`;
+  const found=await driveFindFiles(q,10);
+  return found[0]||await driveCreateFolder(name,parentId);
+}
+async function driveFindFileByName(name,parentId){
+  const q=`name='${name.replaceAll("'","\\'")}' and '${parentId}' in parents and trashed=false`;
+  const f=await driveFindFiles(q,10);
+  return f[0]||null;
+}
+async function driveCreateEmptyFile(name,mimeType,parentId){
+  const meta={name,mimeType,parents:[parentId]};
+  const r=await driveRequest('https://www.googleapis.com/drive/v3/files?fields=id,name,modifiedTime',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(meta)});
+  return r.json();
+}
+async function driveUploadMedia(fileId,body,mimeType){
+  const r=await driveRequest(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media&fields=id,name,modifiedTime,size`,{method:'PATCH',headers:{'Content-Type':mimeType||'application/octet-stream'},body});
+  return r.json();
+}
+async function driveUpsertFile(name,parentId,body,mimeType){
+  let f=await driveFindFileByName(name,parentId);
+  if(!f) f=await driveCreateEmptyFile(name,mimeType,parentId);
+  return driveUploadMedia(f.id,body,mimeType);
+}
+async function listLocalAttachments(){
+  try{
+    const db=await openInvoiceDB();
+    return await new Promise((resolve,reject)=>{
+      const tx=db.transaction('files','readonly');
+      const req=tx.objectStore('files').getAll();
+      req.onsuccess=()=>resolve(req.result||[]);
+      req.onerror=()=>reject(req.error);
+    });
+  }catch(e){return []}
+}
+async function restoreAttachmentRecord(rec){
+  const db=await openInvoiceDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('files','readwrite');
+    tx.objectStore('files').put(rec);
+    tx.oncomplete=()=>resolve();
+    tx.onerror=()=>reject(tx.error);
+  });
+}
+function getDriveAttachmentMap(){
+  try{return JSON.parse(localStorage.getItem('maisonDriveAttachmentMap')||'{}')}catch(e){return {}}
+}
+function setDriveAttachmentMap(m){localStorage.setItem('maisonDriveAttachmentMap',JSON.stringify(m))}
+async function uploadAttachmentsToDrive(rootFolderId){
+  const attachmentFolder=await driveEnsureFolder(DRIVE_ATTACHMENTS_FOLDER,rootFolderId);
+  const locals=await listLocalAttachments();
+  const cache=getDriveAttachmentMap();
+  const manifest=[];
+  for(const rec of locals){
+    const safeName=(rec.name||'piece-jointe').replace(/[\\/]/g,'-');
+    const driveName=`${rec.id}__${safeName}`;
+    const cached=cache[rec.id];
+    let driveFileId=cached?.driveFileId||null;
+    const signature=`${rec.size||0}|${rec.createdAt||''}|${rec.name||''}`;
+    if(!driveFileId || cached.signature!==signature){
+      const up=await driveUpsertFile(driveName,attachmentFolder.id,rec.blob,rec.type||'application/octet-stream');
+      driveFileId=up.id;
+      cache[rec.id]={driveFileId,signature};
+    }
+    manifest.push({id:rec.id,name:rec.name||safeName,type:rec.type||'',size:rec.size||0,createdAt:rec.createdAt||'',driveFileId});
+  }
+  setDriveAttachmentMap(cache);
+  return manifest;
+}
+function roundBackup(n,d=3){
+  if(n===null||n===undefined||Number.isNaN(Number(n))) return null;
+  const f=10**d;
+  return Math.round((Number(n)+Number.EPSILON)*f)/f;
+}
+function backupPaidByCurrency(){
+  const out={};
+  for(const e of state.expenses){
+    const v=Number(e.paidAmount||0);
+    if(v<=0) continue;
+    const c=e.currency||'TND';
+    out[c]=roundBackup((out[c]||0)+v,3);
+  }
+  return out;
+}
+function backupExpenseReadable(e){
+  const rem=remainingNative(e);
+  return {
+    id:e.id,
+    description:e.description||'',
+    fournisseur:e.supplier||'',
+    categorie:e.type||'',
+    statut:e.status||'',
+    devise:e.currency||'TND',
+    montantMarche:e.contractAmount===null||e.contractAmount===''||e.contractAmount===undefined?null:roundBackup(e.contractAmount,3),
+    montantPaye:roundBackup(e.paidAmount||0,3),
+    resteAPayer:rem===null?null:roundBackup(rem,3),
+    tauxTNDUtilise:roundBackup(rateFor(e),6),
+    equivalentMarcheTND:contractTnd(e)===null?null:roundBackup(contractTnd(e),3),
+    equivalentPayeTND:paidTnd(e)===null?null:roundBackup(paidTnd(e),3),
+    equivalentResteTND:remainingTnd(e)===null?null:roundBackup(remainingTnd(e),3),
+    equivalentUSD:e.usdEquivalent===null||e.usdEquivalent===undefined?null:roundBackup(e.usdEquivalent,3),
+    date:e.date||'',
+    notes:e.notes||'',
+    pieceJointe:e.attachmentId?{id:e.attachmentId,nom:e.attachmentName||'Pièce jointe'}:null
+  };
+}
+function buildReadableLots(){
+  return allLots().map(lot=>{
+    const expenses=state.expenses.filter(e=>e.lot===lot);
+    const budget=Number(state.lotBudgets?.[lot]||0);
+    if(!expenses.length && !budget) return null;
+    return {
+      lot,
+      budgetTND:roundBackup(budget,3),
+      totalPayeTND:roundBackup(sum(expenses.map(e=>paidTnd(e)||0)),3),
+      resteConnuTND:roundBackup(sum(expenses.map(e=>remainingTnd(e)||0)),3),
+      nombreDepenses:expenses.length,
+      depenses:expenses.map(backupExpenseReadable)
+    };
+  }).filter(Boolean);
+}
+function buildBackupV2(attachments=[]){
+  const t=totals();
+  return {
+    format:'cout-maison-backup-v2',
+    version:2,
+    application:'Coût Maison',
+    createdAt:new Date().toISOString(),
+    resume:{
+      totalPayeTND:roundBackup(t.paid,3),
+      resteConnuTND:roundBackup(t.remaining,3),
+      materielPayeTND:roundBackup(t.material,3),
+      mainOeuvrePayeeTND:roundBackup(t.labor,3),
+      mixtePayeTND:roundBackup(t.mixed,3),
+      devisNonConfirmesTND:roundBackup(t.quotes,3),
+      nombreDepenses:state.expenses.length,
+      payeParDevise:backupPaidByCurrency()
+    },
+    taux:{
+      usdVersTND:state.settings?.usdRate??null,
+      qarVersTND:state.settings?.qarRate??null,
+      eurVersTND:state.settings?.eurRate??null
+    },
+    lots:buildReadableLots(),
+    piecesJointes:attachments.map(a=>({
+      id:a.id,
+      nom:a.name||'',
+      type:a.type||'',
+      tailleOctets:a.size||0,
+      dateAjout:a.createdAt||'',
+      driveFileId:a.driveFileId||null
+    })),
+    restauration:{
+      storageKey:'maisonCostStateV3',
+      state:clone(state)
+    }
+  };
+}
+function backupCSV(){
+  const head=['Lot','Catégorie','Fournisseur','Description','Statut','Devise','Montant marché','Payé','Reste à payer','Taux TND','Marché TND','Payé TND','Reste TND','Date','Pièce jointe','Notes'];
+  const rows=state.expenses.map(e=>[
+    e.lot,e.type,e.supplier||'',e.description||'',e.status,e.currency,
+    e.contractAmount??'',e.paidAmount??0,remainingNative(e)??'',rateFor(e)||'',
+    contractTnd(e)??'',paidTnd(e)??'',remainingTnd(e)??'',e.date||'',e.attachmentName||'',e.notes||''
+  ]);
+  return '\ufeff'+[head,...rows].map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(';')).join('\n');
+}
+async function buildDriveBackup(rootFolderId){
+  const attachments=await uploadAttachmentsToDrive(rootFolderId);
+  return buildBackupV2(attachments);
+}
+async function saveToGoogleDrive({silent=false,history=true}={}){
+  if(driveBusy) return;
+  driveBusy=true;updateDriveStatus();
+  try{
+    await ensureDriveToken(!silent);
+    const root=await driveEnsureFolder(DRIVE_BACKUP_FOLDER);
+    const payload=await buildDriveBackup(root.id);
+    const text=JSON.stringify(payload,null,2);
+    const current=await driveUpsertFile(DRIVE_CURRENT_BACKUP,root.id,text,'application/json');
+    await driveUpsertFile(DRIVE_REPORT_FILE,root.id,backupCSV(),'text/csv;charset=utf-8');
+    if(history){
+      const stamp=new Date().toISOString().replace(/[:.]/g,'-');
+      await driveUpsertFile(`Historique_Cout_Maison_${stamp}.json`,root.id,text,'application/json');
+      await pruneDriveHistory(root.id,10);
+    }
+    const when=current.modifiedTime||new Date().toISOString();
+    localStorage.setItem('maisonDriveLastBackup',when);
+    updateDriveStatus('Sauvegarde Google Drive terminée ✓');
+    if(!silent) alert('Sauvegarde Google Drive terminée.');
+  }catch(e){
+    console.error(e);
+    updateDriveStatus('Erreur Google Drive');
+    if(!silent) alert('Sauvegarde Drive impossible : '+(e.message||e));
+  }finally{
+    driveBusy=false;
+    setTimeout(()=>updateDriveStatus(),1800);
+  }
+}
+async function pruneDriveHistory(rootId,keep=10){
+  try{
+    const q=`'${rootId}' in parents and name contains 'Historique_Cout_Maison_' and trashed=false`;
+    const files=await driveFindFiles(q,100);
+    for(const f of files.slice(keep)){
+      await driveRequest(`https://www.googleapis.com/drive/v3/files/${f.id}`,{method:'DELETE'});
+    }
+  }catch(e){console.warn('Historique Drive non nettoyé',e)}
+}
+async function restoreFromGoogleDrive(){
+  if(!confirm('Restaurer la dernière sauvegarde Google Drive ? Les données actuelles de cet appareil seront remplacées après confirmation.'))return;
+  driveBusy=true;updateDriveStatus();
+  try{
+    await ensureDriveToken(true);
+    const root=await driveEnsureFolder(DRIVE_BACKUP_FOLDER);
+    let f=await driveFindFileByName(DRIVE_CURRENT_BACKUP,root.id);
+    if(!f) f=await driveFindFileByName(DRIVE_LEGACY_BACKUP,root.id);
+    if(!f) throw new Error('Aucune sauvegarde Coût Maison trouvée dans Google Drive.');
+    const r=await driveRequest(`https://www.googleapis.com/drive/v3/files/${f.id}?alt=media`);
+    const backup=await r.json();
+    const restoredState=backup?.restauration?.state||backup?.state||backup;
+    if(!restoredState?.expenses||!restoredState?.settings) throw new Error('Sauvegarde invalide.');
+    const backupAttachments=Array.isArray(backup.piecesJointes)?backup.piecesJointes.map(a=>({id:a.id,name:a.nom,type:a.type,size:a.tailleOctets,createdAt:a.dateAjout,driveFileId:a.driveFileId})):backup.attachments;
+    if(Array.isArray(backupAttachments)){
+      for(const a of backupAttachments){
+        if(!a.driveFileId) continue;
+        try{
+          const ar=await driveRequest(`https://www.googleapis.com/drive/v3/files/${a.driveFileId}?alt=media`);
+          const blob=await ar.blob();
+          await restoreAttachmentRecord({id:a.id,name:a.name||'piece-jointe',type:a.type||blob.type,size:a.size||blob.size,blob,createdAt:a.createdAt||new Date().toISOString()});
+        }catch(err){console.warn('Pièce jointe non restaurée',a.id,err)}
+      }
+    }
+    state=restoredState;
+    localStorage.setItem('maisonCostStateV3',JSON.stringify(state));
+    localStorage.setItem('maisonDriveLastBackup',f.modifiedTime||new Date().toISOString());
+    renderCurrent();
+    updateDriveStatus('Restauration terminée ✓');
+    alert('Données restaurées depuis Google Drive.');
+  }catch(e){
+    console.error(e);
+    updateDriveStatus('Erreur Google Drive');
+    alert('Restauration impossible : '+(e.message||e));
+  }finally{
+    driveBusy=false;
+    setTimeout(()=>updateDriveStatus(),1800);
+  }
+}
+async function connectGoogleDrive(){
+  try{
+    await ensureDriveToken(true);
+    updateDriveStatus('Google Drive connecté ✓');
+    await saveToGoogleDrive({silent:true,history:true});
+  }catch(e){
+    console.error(e);
+    updateDriveStatus('Connexion annulée ou impossible');
+    alert('Connexion Google Drive impossible : '+(e.message||e));
+  }
+}
+function scheduleDriveAutoBackup(){
+  if(!driveAutoEnabled()||!driveAccessToken||driveBusy) return;
+  clearTimeout(driveAutoTimer);
+  driveAutoTimer=setTimeout(()=>saveToGoogleDrive({silent:true,history:false}),1800);
+}
+
 function renderSettings(){
   document.getElementById('tab-settings').innerHTML=`
   <div class="card section">
@@ -1398,17 +1769,32 @@ function renderSettings(){
     </div>
   </div>
   <div class="card section">
+    <div class="section-title"><h2>☁️ Google Drive</h2><span class="badge">Sauvegarde cloud</span></div>
+    <div class="help" style="margin-bottom:12px">Les données restent d’abord sur cet iPhone. Google Drive ajoute une copie de sécurité dans <strong>Cout Maison - Sauvegardes</strong>. Les pièces jointes locales sont également copiées quand elles sont disponibles.</div>
+    <div class="toolbar">
+      <button class="btn primary" onclick="connectGoogleDrive()">☁️ Connecter Google Drive</button>
+      <button class="btn" onclick="saveToGoogleDrive()">Sauvegarder maintenant</button>
+      <button class="btn" onclick="restoreFromGoogleDrive()">↩️ Restaurer depuis Drive</button>
+    </div>
+    <div style="margin-top:12px;display:grid;gap:7px">
+      <div class="help"><strong>État :</strong> <span id="driveStatus">${driveStatusText()}</span></div>
+      <div class="help"><strong>Dernière sauvegarde :</strong> <span id="driveLastBackup">${driveLastBackup()?new Date(driveLastBackup()).toLocaleString('fr-FR'):'Aucune sauvegarde Drive'}</span></div>
+      <label class="help" style="display:flex;align-items:center;gap:8px"><input id="driveAutoToggle" type="checkbox" style="width:auto" ${driveAutoEnabled()?'checked':''} onchange="setDriveAuto(this.checked)"> Sauvegarde automatique pendant que Google Drive est connecté</label>
+    </div>
+    <div class="small-note" style="margin-top:10px">Pour des raisons de sécurité Google, une nouvelle session peut demander de reconnecter Drive. Aucune donnée locale n’est supprimée pendant une mise à jour de l’application.</div>
+  </div>
+  <div class="card section">
     <div class="section-title"><h2>Sauvegarde & export</h2></div>
     <div class="toolbar">
-      <button class="btn primary" onclick="exportJSON()">Sauvegarder JSON</button>
+      <button class="btn primary" onclick="exportJSON()">Backup V2 JSON</button>
       <label class="btn">Importer JSON<input type="file" accept=".json,application/json" style="display:none" onchange="importJSON(this.files[0])"></label>
-      <button class="btn" onclick="exportCSV()">Exporter CSV</button>
+      <button class="btn" onclick="exportCSV()">Rapport CSV lisible</button>
       <button class="btn" onclick="window.print()">Imprimer / PDF</button>
       <button class="btn danger" onclick="resetData()">Réinitialiser les données</button>
     </div>
-    <p class="help">Les données sont sauvegardées automatiquement dans ce navigateur. L'export JSON permet de faire une copie de sécurité ou de transférer les données vers un autre appareil.</p>
+    <p class="help">Le <strong>Backup V2 JSON</strong> contient un résumé lisible, les dépenses regroupées par lot et une section technique pour restaurer l'application exactement. Le rapport CSV est pratique à lire dans Excel. Les pièces jointes complètes sont protégées par la sauvegarde Google Drive.</p>
   </div>
-  <div class="notice">Conseil : fais régulièrement une sauvegarde JSON, surtout avant de changer d'ordinateur ou de navigateur.</div>
+  <div class="notice">Conseil : garde une copie du Backup V2 JSON en plus de Google Drive. Le fichier reste lisible par toi tout en étant restaurable dans l'application.</div>
 
   <div class="card section">
     <div class="section-title"><h2>Installation sur iPhone / iPad</h2><span class="badge">iOS</span></div>
@@ -1517,16 +1903,13 @@ function deleteExpense(id){
   }
 }
 function exportJSON(){
-  downloadBlob(JSON.stringify(state,null,2),'suivi-maison-backup.json','application/json');
+  const backup=buildBackupV2([]);
+  const stamp=new Date().toISOString().slice(0,10);
+  downloadBlob(JSON.stringify(backup,null,2),`Cout_Maison_BACKUP_${stamp}.json`,'application/json');
 }
 function exportCSV(){
-  const head=['Lot','Categorie','Fournisseur','Description','Statut','Devise','Total devis','Paye','Equivalent TND','Reste','Date','Notes'];
-  const rows=state.expenses.map(e=>[
-    e.lot,e.type,e.supplier,e.description,e.status,e.currency,e.contractAmount??'',e.paidAmount,
-    paidTnd(e)??'',remainingNative(e)??'',e.date||'',e.notes||''
-  ]);
-  const csv=[head,...rows].map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');
-  downloadBlob('\ufeff'+csv,'suivi-maison-depenses.csv','text/csv;charset=utf-8');
+  const stamp=new Date().toISOString().slice(0,10);
+  downloadBlob(backupCSV(),`Cout_Maison_RAPPORT_${stamp}.csv`,'text/csv;charset=utf-8');
 }
 function downloadBlob(text,name,type){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
@@ -1537,8 +1920,9 @@ function importJSON(file){
   r.onload=()=>{
     try{
       const obj=JSON.parse(r.result);
-      if(!obj.expenses||!obj.settings)throw new Error();
-      state=obj;persist();renderCurrent();alert('Sauvegarde importée.');
+      const restored=obj?.restauration?.state||obj?.state||obj;
+      if(!restored?.expenses||!restored?.settings)throw new Error();
+      state=restored;persist();renderCurrent();alert('Sauvegarde importée.');
     }catch(e){alert('Fichier de sauvegarde invalide.')}
   };r.readAsText(file);
 }
